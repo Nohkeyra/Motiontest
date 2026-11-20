@@ -81,7 +81,7 @@ try{
   await page.screenshot({path:path.join(out,'after-start.png'),animations:'disabled'});
   // Real guest journey: login screen -> Prepare a Draft -> Event selection -> Menu.
   // No personal data is entered and no order is submitted.
-  const draftButton = page.getByRole('button',{name:/Prepare a Draft/i});
+  const draftButton = page.getByRole('button',{name:'Prepare a Draft',exact:true});
   await draftButton.waitFor({state:'visible',timeout:15000});
   await draftButton.click();
   await page.locator('.customer-order-form[data-step="1"]').waitFor({state:'visible',timeout:35000});
