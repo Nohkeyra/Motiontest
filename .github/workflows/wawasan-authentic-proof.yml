@@ -1,64 +1,65 @@
-name: Wawasan real APK motion proof
+name: Wawasan signed APK bundle to motion proof
 on:
   workflow_dispatch:
     inputs:
       apk_tag:
-        description: Signed Wawasan release tag
-        default: v1.3.225
-        required: true
+        description: 'Signed APK release tag'
         type: string
+        required: true
+        default: 'v1.3.225'
   push:
     branches: [main]
     paths:
-      - .github/workflows/wawasan-authentic-proof.yml
-      - scripts/capture-apk.sh
-      - scripts/verify.py
-      - videos/wawasan-authentic/**
+      - '.github/workflows/wawasan-authentic-proof.yml'
+      - 'scripts/extract-apk-webview.sh'
+      - 'scripts/capture-apk-webview.mjs'
+      - 'scripts/verify.py'
+      - 'videos/wawasan-authentic/**'
 permissions:
   contents: read
 jobs:
-  apk-capture:
-    # Intel macOS provides Hypervisor.Framework acceleration; the Ubuntu runner
-    # used in the failed run had no KVM and the emulator exited immediately.
-    runs-on: macos-15-intel
-    timeout-minutes: 40
+  apk-webview:
+    name: Capture released APK bundled frontend automatically
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Check hardware virtualization before starting Android
-        run: |
-          if [ "$(sysctl -n kern.hv_support)" != "1" ]; then
-            echo '::error::This macOS runner cannot accelerate the Android emulator.'
-            exit 1
-          fi
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
-      - run: python3 -m pip install --user 'pillow>=10,<12'
-      - name: Capture actual signed APK in emulator
-        uses: reactivecircus/android-emulator-runner@v2
+          node-version: '22'
+      - name: Extract exact compiled web assets from signed APK
         env:
           APK_TAG: ${{ inputs.apk_tag || 'v1.3.225' }}
+        run: bash scripts/extract-apk-webview.sh
+      - name: Install headless browser
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.58.1
+          npx playwright install --with-deps chromium
+      - name: Capture real APK UI without emulator
+        run: |
+          cd apk-site/site
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/wawasan-http.log 2>&1 &
+          webserver_pid=$!
+          trap 'kill "$webserver_pid" 2>/dev/null || true' EXIT
+          cd "$GITHUB_WORKSPACE"
+          node scripts/capture-apk-webview.mjs
+      - name: Verify captured images and provenance
+        run: |
+          python3 -m pip install --user 'pillow>=10,<12'
+          python3 scripts/verify.py capture capture
+      - name: Upload screenshots or diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_6
-          cores: 2
-          ram-size: 3072M
-          emulator-boot-timeout: 240
-          disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
-          script: bash scripts/capture-apk.sh
-      - uses: actions/upload-artifact@v4
-        with:
-          name: signed-apk-screens
+          name: wawasan-APK-compiled-UI-captures
           path: capture/
           retention-days: 7
-          if-no-files-found: error
+          if-no-files-found: warn
+
   render:
-    needs: apk-capture
+    needs: apk-webview
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: videos/wawasan-authentic
@@ -66,26 +67,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: signed-apk-screens
+          name: wawasan-APK-compiled-UI-captures
           path: videos/wawasan-authentic/public/frames
-      - run: |
+      - name: Verify source screenshots
+        run: |
           python3 -m pip install --user 'pillow>=10,<12'
           python3 ../../scripts/verify.py capture public/frames
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install matched Remotion dependencies
+      - name: Install matched Remotion versions
         run: |
           VERSION="$(npm view remotion version)"
           npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
       - run: npx remotion browser ensure
-      - name: Render nine-second style proof
+      - name: Render original 9-second style proof
         run: npm run render:proof
-      - name: Validate MP4 and extract review frames
+      - name: Verify MP4 and extract review frames
         run: python3 ../../scripts/verify.py video out/authentic-proof.mp4
       - uses: actions/upload-artifact@v4
         with:
-          name: wawasan-authentic-motion-proof
+          name: wawasan-original-motion-proof
           retention-days: 14
           if-no-files-found: error
           path: |
