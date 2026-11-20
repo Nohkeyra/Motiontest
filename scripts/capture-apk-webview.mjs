@@ -28,7 +28,23 @@ page.on('requestfailed',r=>{
 });
 try{
   await page.goto('http://127.0.0.1:4173/#/',{waitUntil:'domcontentloaded',timeout:30000});
-  await page.locator('.native-welcome[data-ready="true"]').waitFor({state:'visible',timeout:50000});
+  await page.waitForTimeout(6000);
+  const preflight=await page.evaluate(()=>({
+    url:location.href,
+    platform:window.Capacitor?.getPlatform?.() || 'unknown',
+    native:window.Capacitor?.isNativePlatform?.(),
+    welcome_exists:!!document.querySelector('.native-welcome'),
+    welcome_ready:document.querySelector('.native-welcome')?.getAttribute('data-ready'),
+    root_length:document.querySelector('#root')?.innerHTML?.length || 0,
+    title:document.title,
+    main_text:(document.body?.innerText || '').slice(0,1400),
+    body_class:document.body?.className || ''
+  }));
+  await fs.writeFile(path.join(out,'preflight.json'),JSON.stringify({...preflight,errors},null,2));
+  await page.screenshot({path:path.join(out,'preflight.png'),animations:'disabled'});
+  console.log('APK web-bundle preflight:',JSON.stringify(preflight).slice(0,1600));
+  if(!preflight.welcome_exists) throw new Error('APK web bundle did not present the native welcome component; see preflight artifact.');
+  await page.locator('.native-welcome[data-ready="true"]').waitFor({state:'visible',timeout:20000});
   const button=page.locator('.native-welcome__button');
   await button.waitFor({state:'visible',timeout:10000});
   await page.waitForFunction(()=>{
