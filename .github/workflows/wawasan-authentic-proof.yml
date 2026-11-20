@@ -1,0 +1,82 @@
+name: Wawasan real APK motion proof
+on:
+  workflow_dispatch:
+    inputs:
+      apk_tag:
+        description: Signed Wawasan release tag
+        default: v1.3.225
+        required: true
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/wawasan-authentic-proof.yml
+      - scripts/capture-apk.sh
+      - scripts/verify.py
+      - videos/wawasan-authentic/**
+permissions:
+  contents: read
+jobs:
+  apk-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --user 'pillow>=10,<12'
+      - name: Capture actual signed APK in emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          APK_TAG: ${{ inputs.apk_tag || 'v1.3.225' }}
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          ram-size: 3072M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: bash scripts/capture-apk.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signed-apk-screens
+          path: capture/
+          retention-days: 7
+          if-no-files-found: error
+  render:
+    needs: apk-capture
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: signed-apk-screens
+          path: videos/wawasan-authentic/public/frames
+      - run: |
+          python3 -m pip install --user 'pillow>=10,<12'
+          python3 ../../scripts/verify.py capture public/frames
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install matched Remotion dependencies
+        run: |
+          VERSION="$(npm view remotion version)"
+          npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
+      - run: npx remotion browser ensure
+      - name: Render nine-second style proof
+        run: npm run render:proof
+      - name: Validate MP4 and extract review frames
+        run: python3 ../../scripts/verify.py video out/authentic-proof.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wawasan-authentic-motion-proof
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            videos/wawasan-authentic/out/authentic-proof.mp4
+            videos/wawasan-authentic/out/review-frames/*.png
+            videos/wawasan-authentic/public/frames/capture.json

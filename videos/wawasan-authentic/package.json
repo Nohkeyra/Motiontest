@@ -1,0 +1,8 @@
+{
+  "name": "wawasan-authentic-film",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "render:proof": "remotion render src/index.ts AuthenticProof out/authentic-proof.mp4 --codec=h264 --crf=20 --concurrency=2"
+  }
+}
