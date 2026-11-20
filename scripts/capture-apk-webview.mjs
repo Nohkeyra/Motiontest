@@ -99,9 +99,19 @@ try{
   await page.evaluate(()=>scrollTo(0,0));
   await page.waitForTimeout(1800);
   await page.screenshot({path:path.join(out,'order-menu.png'),animations:'disabled'});
+  // Additional honest menu-detail capture, only if the compiled APK has
+  // actually rendered its own dish list. No filler images are ever generated.
+  const realDishList=page.locator('[data-tour="step2-dish-list"]').first();
+  const hasDishList=(await realDishList.count())>0;
+  if(hasDishList){
+    await realDishList.scrollIntoViewIfNeeded({timeout:10000});
+    await page.waitForTimeout(500);
+    await page.screenshot({path:path.join(out,'order-dishes.png'),animations:'disabled'});
+  }
+
   const origin=JSON.parse(await fs.readFile(path.join(out,'origin.json'),'utf8'));
   const hashes={};
-  for(const name of ['welcome.png','welcome-light.png','after-start.png','order-start.png','order-selected.png','order-menu.png']){
+  for(const name of ['welcome.png','welcome-light.png','after-start.png','order-start.png','order-selected.png','order-menu.png',...(hasDishList?['order-dishes.png']:[])]){
     hashes[name]=crypto.createHash('sha256').update(await fs.readFile(path.join(out,name))).digest('hex');
   }
   const manifest={...origin,screen_capture:'Live compiled APK UI in Chromium mobile viewport',
