@@ -1,0 +1,32 @@
+name: Render Remotion smoke test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: videos/remotion-smoke-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install matching Remotion versions
+        run: |
+          VERSION="$(npm view remotion version)"
+          npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
+      - name: Install Remotion browser
+        run: npx remotion browser ensure
+      - name: Render MP4
+        run: npm run render
+      - name: Upload video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wawasan-remotion-smoke-test
+          path: videos/remotion-smoke-test/out/wawasan-smoke-test.mp4
+          if-no-files-found: error

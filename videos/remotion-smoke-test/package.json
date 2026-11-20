@@ -1,0 +1,9 @@
+{
+  "name": "wawasan-remotion-smoke-test",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "render": "remotion render src/index.ts WawasanSmokeTest out/wawasan-smoke-test.mp4 --codec=h264 --crf=20 --concurrency=2",
+    "compositions": "remotion compositions src/index.ts"
+  }
+}
