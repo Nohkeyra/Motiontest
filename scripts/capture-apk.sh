@@ -9,7 +9,7 @@ APK="$RUNNER_TEMP/wawasan.apk"
 curl --fail --location --retry 3 --silent --show-error \
   "https://github.com/Nohkeyra/Pu/releases/download/$TAG/app-release-signed.apk" -o "$APK"
 unzip -t "$APK" >/dev/null
-SHA="$(sha256sum "$APK" | cut -d' ' -f1)"
+SHA="$(shasum -a 256 "$APK" | awk '{print $1}')"
 adb install -r "$APK"
 adb shell am force-stop "$APP" >/dev/null 2>&1 || true
 adb shell am start -n "$APP/.MainActivity"

@@ -18,10 +18,21 @@ permissions:
   contents: read
 jobs:
   apk-capture:
-    runs-on: ubuntu-latest
+    # Intel macOS provides Hypervisor.Framework acceleration; the Ubuntu runner
+    # used in the failed run had no KVM and the emulator exited immediately.
+    runs-on: macos-15-intel
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+      - name: Check hardware virtualization before starting Android
+        run: |
+          if [ "$(sysctl -n kern.hv_support)" != "1" ]; then
+            echo '::error::This macOS runner cannot accelerate the Android emulator.'
+            exit 1
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: python3 -m pip install --user 'pillow>=10,<12'
       - name: Capture actual signed APK in emulator
         uses: reactivecircus/android-emulator-runner@v2
@@ -34,6 +45,7 @@ jobs:
           profile: pixel_6
           cores: 2
           ram-size: 3072M
+          emulator-boot-timeout: 240
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: bash scripts/capture-apk.sh
