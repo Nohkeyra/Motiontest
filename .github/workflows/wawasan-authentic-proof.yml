@@ -83,9 +83,15 @@ jobs:
       - run: npx remotion browser ensure
       - name: Render original 9-second style proof
         run: npm run render:proof
+      - name: Install FFmpeg for independent video checks
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffprobe -version | head -n 1
       - name: Verify MP4 and extract review frames
         run: python3 ../../scripts/verify.py video out/authentic-proof.mp4
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: wawasan-original-motion-proof
           retention-days: 14
