@@ -58,6 +58,17 @@ try{
   if(await button.isDisabled()) throw new Error('Real Get Started control remains disabled.');
   await page.evaluate(()=>document.fonts.ready);
   await page.screenshot({path:path.join(out,'welcome.png'),animations:'disabled'});
+  // Use the genuine built-in theme switch for an alternate authentic welcome state.
+  // Both states remain actual APK frontend captures; no reconstruction.
+  const welcomeTheme = await page.locator('.native-welcome').getAttribute('data-theme');
+  if (welcomeTheme !== 'dark') throw new Error('Expected a clean dark welcome state from APK settings.');
+  await page.locator('.native-welcome__theme-icon').click();
+  await page.locator('.native-welcome[data-theme="light"]').waitFor({state:'visible',timeout:12000});
+  await page.waitForTimeout(600);
+  await page.screenshot({path:path.join(out,'welcome-light.png'),animations:'disabled'});
+  await page.locator('.native-welcome__theme-icon').click();
+  await page.locator('.native-welcome[data-theme="dark"]').waitFor({state:'visible',timeout:12000});
+  await page.waitForTimeout(700);
   await button.click();
   await page.locator('.native-welcome').waitFor({state:'detached',timeout:20000});
   await page.waitForTimeout(3000);
@@ -68,14 +79,44 @@ try{
   }));
   if(!details.has_main||details.visible_text.length<20) throw new Error('Rendered post-welcome screen is empty.');
   await page.screenshot({path:path.join(out,'after-start.png'),animations:'disabled'});
+  // Real guest journey: login screen -> Prepare a Draft -> Event selection -> Menu.
+  // No personal data is entered and no order is submitted.
+  const draftButton = page.getByRole('button',{name:/Prepare a Draft/i});
+  await draftButton.waitFor({state:'visible',timeout:15000});
+  await draftButton.click();
+  await page.locator('.customer-order-form[data-step="1"]').waitFor({state:'visible',timeout:35000});
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.waitForTimeout(1200);
+  await page.screenshot({path:path.join(out,'order-start.png'),animations:'disabled'});
+  await page.locator('[data-tour="step1-event-type"] [role="radio"]').first().click();
+  await page.locator('[data-tour="step1-meal-tengahari"]').click();
+  await page.locator('[data-tour="step1-prep-buffet"]').click();
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.waitForTimeout(700);
+  await page.screenshot({path:path.join(out,'order-selected.png'),animations:'disabled'});
+  await page.locator('[data-tour="step1-next"]').click();
+  await page.locator('.customer-order-form[data-step="2"]').waitFor({state:'visible',timeout:35000});
+  await page.evaluate(()=>scrollTo(0,0));
+  await page.waitForTimeout(1800);
+  await page.screenshot({path:path.join(out,'order-menu.png'),animations:'disabled'});
   const origin=JSON.parse(await fs.readFile(path.join(out,'origin.json'),'utf8'));
   const hashes={};
-  for(const name of ['welcome.png','after-start.png']){
+  for(const name of ['welcome.png','welcome-light.png','after-start.png','order-start.png','order-selected.png','order-menu.png']){
     hashes[name]=crypto.createHash('sha256').update(await fs.readFile(path.join(out,name))).digest('hex');
   }
   const manifest={...origin,screen_capture:'Live compiled APK UI in Chromium mobile viewport',
     verification:'Real Get Started control clicked; original app removed welcome screen',
-    post_welcome:details,screens:hashes,nonfatal_errors:errors.slice(0,10)};
+    post_welcome:details,
+    observed_order_flow:{
+      trigger:'Prepare a Draft',
+      route:'#/order',
+      selected_event:'Office Feast',
+      selected_meal:'Lunch',
+      selected_serving:'Buffet Style',
+      advanced_to_step:2,
+      submit_performed:false
+    },
+    screens:hashes,nonfatal_errors:errors.slice(0,10)};
   await fs.writeFile(path.join(out,'capture.json'),JSON.stringify(manifest,null,2));
   console.log('Captured APK-bundled web frontend. Post-welcome route:',details.route);
 }catch(e){
