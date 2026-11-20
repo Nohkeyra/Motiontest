@@ -12,6 +12,9 @@ const context=await browser.newContext({
   hasTouch:true,colorScheme:'light',locale:'en-MY'
 });
 await context.addInitScript(()=>{
+  // Supported Capacitor runtime hook. The earlier cap.getPlatform override
+  // was overwritten by @capacitor/core during initialization.
+  window.CapacitorCustomPlatform={name:'android'};
   const cap=window.Capacitor||{};
   cap.platform='android';
   cap.getPlatform=()=> 'android';
