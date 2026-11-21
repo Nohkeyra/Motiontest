@@ -63,6 +63,10 @@ jobs:
             git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git -C "$GITHUB_WORKSPACE" add videos/hyperframes-wawasan/package-lock.json
             git -C "$GITHUB_WORKSPACE" commit -m "build(hyperframes): lock verified HTML-renderer dependencies"
+            # Other motion tool jobs can push while this render runs.
+            # Rebase our new lockfile commit onto latest main before publishing.
+            git -C "$GITHUB_WORKSPACE" fetch origin main
+            git -C "$GITHUB_WORKSPACE" rebase origin/main
             git -C "$GITHUB_WORKSPACE" push origin HEAD:main
           fi
       - uses: actions/upload-artifact@v4
