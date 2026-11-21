@@ -15,7 +15,7 @@ const Geometry:React.FC=()=>{
   const spin=interpolate(frame,[0,89],[-0.4,Math.PI*0.65]);
   const reveal=move(frame,0,30);
   return <group rotation={[0.11*Math.sin(frame/15),spin,0.08*Math.sin(frame/22)]}
-    position={[0,0.2,0]} scale={0.8+reveal*0.22}>
+    position={[0,0.2,0]} scale={0.62+reveal*0.16}>
     <mesh>
       <boxGeometry args={[3.5,5.9,0.26]}/>
       <meshStandardMaterial color="#291A17" roughness={0.34} metalness={0.12}/>
@@ -46,7 +46,7 @@ export const Wawasan3DSmoke:React.FC=()=>{
   const headline=move(frame,18,46);
   return <AbsoluteFill style={{backgroundColor:'#F8EAD1',overflow:'hidden'}}>
     <ThreeCanvas width={width} height={height} orthographic={false}
-      camera={{fov:35,position:[0,0,12]}}
+      camera={{fov:45,position:[0,0,13]}}
       style={{width,height,backgroundColor:'#F8EAD1'}}>
       <ambientLight intensity={1.2}/>
       <directionalLight color="#FFF4E0" intensity={3.3} position={[4,7,9]}/>

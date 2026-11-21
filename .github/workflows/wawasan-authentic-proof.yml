@@ -92,13 +92,8 @@ jobs:
         run: |
           bash ../../scripts/prepare-master-beat.sh
           python3 ../../scripts/music-beat-grid.py .
-      - name: Install declared, compatible Remotion packages
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --no-audit --no-fund
-          fi
+      - name: Install reproducible video dependencies
+        run: npm ci --no-audit --no-fund
       - run: npx remotion browser ensure
       - name: Render beat-driven 30-second master cut
         run: npm run render:master
