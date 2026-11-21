@@ -27,3 +27,11 @@ The main application is Nohkeyra/Pu. Do not change it for video production.
 - Keep cuts confidently paced around the user-selected beat (110–120 BPM preferred). Do not assume a track has been chosen.
 - For maps, use actual route coordinates/recordings and never pretend abstract Manim sketches are live rider tracking.
 - The two references are creative guidance only; do not commit or redistribute the original third-party videos.
+
+## Sound design for the promo film
+
+- Before rendering with sound effects, run `npm run prepare:sfx` and `npm run check:sfx` inside `videos/wawasan-authentic`.
+- Audio library and Remotion helpers: `src/audio/SoundDesign.tsx`, demo `WawasanSfxPreview`.
+- Synthetic WAVs are deterministic and generated on GitHub Actions; no third-party samples, music or recordings need to be checked into the source repo.
+- Sync SFX to real taps, route animation, invoice changes and typography beats. Never claim the demo's example cue frames match actual user interactions.
+- The existing MasterCut soundtrack and the app's own notification audio are explicitly out of scope until separately approved. Use music ducking only after reviewing the chosen track and final cue positions.
