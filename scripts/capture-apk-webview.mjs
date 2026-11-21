@@ -9,7 +9,8 @@ const out=path.join(root,'capture');
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const context=await browser.newContext({
   viewport:{width:432,height:900},deviceScaleFactor:2.5,isMobile:true,
-  hasTouch:true,colorScheme:'light',locale:'en-MY'
+  hasTouch:true,colorScheme:'light',locale:'en-MY',
+  recordVideo:{dir:path.join(out,'recordings'),size:{width:864,height:1800}}
 });
 await context.addInitScript(()=>{
   // Supported Capacitor runtime hook. The earlier cap.getPlatform override
@@ -24,6 +25,9 @@ await context.addInitScript(()=>{
   window.Capacitor=cap;
 });
 const page=await context.newPage();
+const videoStart=Date.now();
+const marks={};
+const mark=(name)=>{marks[name]=Math.max(0,(Date.now()-videoStart)/1000);};
 const errors=[];
 page.on('pageerror',e=>errors.push(e.message.slice(0,200)));
 page.on('requestfailed',r=>{
@@ -62,6 +66,7 @@ try{
   // Both states remain actual APK frontend captures; no reconstruction.
   const welcomeTheme = await page.locator('.native-welcome').getAttribute('data-theme');
   if (welcomeTheme !== 'dark') throw new Error('Expected a clean dark welcome state from APK settings.');
+  mark('theme-toggle');
   await page.locator('.native-welcome__theme-icon').click();
   await page.locator('.native-welcome[data-theme="light"]').waitFor({state:'visible',timeout:12000});
   await page.waitForTimeout(600);
@@ -69,6 +74,7 @@ try{
   await page.locator('.native-welcome__theme-icon').click();
   await page.locator('.native-welcome[data-theme="dark"]').waitFor({state:'visible',timeout:12000});
   await page.waitForTimeout(700);
+  mark('get-started');
   await button.click();
   await page.locator('.native-welcome').waitFor({state:'detached',timeout:20000});
   await page.waitForTimeout(3000);
@@ -83,17 +89,20 @@ try{
   // No personal data is entered and no order is submitted.
   const draftButton = page.getByRole('button',{name:'Prepare a Draft',exact:true});
   await draftButton.waitFor({state:'visible',timeout:15000});
+  mark('prepare-draft');
   await draftButton.click();
   await page.locator('.customer-order-form[data-step="1"]').waitFor({state:'visible',timeout:35000});
   await page.evaluate(()=>scrollTo(0,0));
   await page.waitForTimeout(1200);
   await page.screenshot({path:path.join(out,'order-start.png'),animations:'disabled'});
+  mark('select-event');
   await page.locator('[data-tour="step1-event-type"] [role="radio"]').first().click();
   await page.locator('[data-tour="step1-meal-tengahari"]').click();
   await page.locator('[data-tour="step1-prep-buffet"]').click();
   await page.evaluate(()=>scrollTo(0,0));
   await page.waitForTimeout(700);
   await page.screenshot({path:path.join(out,'order-selected.png'),animations:'disabled'});
+  mark('next-menu');
   await page.locator('[data-tour="step1-next"]').click();
   await page.locator('.customer-order-form[data-step="2"]').waitFor({state:'visible',timeout:35000});
   await page.evaluate(()=>scrollTo(0,0));
@@ -104,11 +113,30 @@ try{
   const realDishList=page.locator('[data-tour="step2-dish-list"]').first();
   const hasDishList=(await realDishList.count())>0;
   if(hasDishList){
+    mark('dish-reveal');
     await realDishList.scrollIntoViewIfNeeded({timeout:10000});
     await page.waitForTimeout(500);
     await page.screenshot({path:path.join(out,'order-dishes.png'),animations:'disabled'});
   }
 
+  await page.waitForTimeout(650);
+  mark('end');
+  // Close before copying so Chromium finalizes the actual interaction video.
+  await context.close();
+  const originalWebm=await page.video().path();
+  await fs.copyFile(originalWebm,path.join(out,'interaction-full.webm'));
+  await fs.writeFile(path.join(out,'interaction-times.json'),JSON.stringify({
+    captured_at:'Real compiled Wawasan APK frontend in Chromium',
+    duration:marks.end,
+    markers:marks,
+    examples:[
+      {file:'theme.mp4',marker:'theme-toggle',seconds:2.8},
+      {file:'started.mp4',marker:'get-started',seconds:2.8},
+      {file:'draft.mp4',marker:'prepare-draft',seconds:3.4},
+      {file:'selection.mp4',marker:'select-event',seconds:4.2},
+      {file:'menu.mp4',marker:'next-menu',seconds:3.5}
+    ]
+  },null,2));
   const origin=JSON.parse(await fs.readFile(path.join(out,'origin.json'),'utf8'));
   const hashes={};
   for(const name of ['welcome.png','welcome-light.png','after-start.png','order-start.png','order-selected.png','order-menu.png',...(hasDishList?['order-dishes.png']:[])]){
@@ -126,6 +154,7 @@ try{
       advanced_to_step:2,
       submit_performed:false
     },
+    real_interaction_video:'interaction-full.webm',interaction_markers:'interaction-times.json',
     screens:hashes,nonfatal_errors:errors.slice(0,10)};
   await fs.writeFile(path.join(out,'capture.json'),JSON.stringify(manifest,null,2));
   console.log('Captured APK-bundled web frontend. Post-welcome route:',details.route);
