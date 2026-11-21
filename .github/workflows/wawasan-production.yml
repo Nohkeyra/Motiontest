@@ -1,0 +1,122 @@
+name: Wawasan cinematic films — genuine UI
+on:
+  push:
+    paths:
+      - 'videos/wawasan-film/**'
+      - '.github/workflows/wawasan-production.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout Motiontest production engine
+        uses: actions/checkout@v4
+      - name: Checkout Wawasan source without modifying it
+        uses: actions/checkout@v4
+        with:
+          repository: Nohkeyra/Pu
+          path: pu
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Get actual Wawasan APK web assets, or fall back to building Pu
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site
+          curl -fsSL --retry 2 'https://api.github.com/repos/Nohkeyra/Pu/releases/latest' -o "$RUNNER_TEMP/latest.json" || echo '{}' > "$RUNNER_TEMP/latest.json"
+          ASSET_URL="$(jq -r '[.assets[]? | select(.name | test("\\.apk$"; "i")) | .browser_download_url] | first // empty' "$RUNNER_TEMP/latest.json")"
+          APK_OK=false
+          if [[ -n "$ASSET_URL" ]]; then
+            if curl -fL --retry 2 "$ASSET_URL" -o "$RUNNER_TEMP/wawasan.apk"; then
+              mkdir -p "$RUNNER_TEMP/apk-unpacked"
+              if unzip -oq "$RUNNER_TEMP/wawasan.apk" 'assets/public/*' -d "$RUNNER_TEMP/apk-unpacked"; then
+                cp -a "$RUNNER_TEMP/apk-unpacked/assets/public/." site/
+                APK_OK=true
+              fi
+            fi
+          fi
+          if [[ "$APK_OK" == true && -s site/index.html ]]; then
+            echo 'SOURCE=APK release (real signed-app web assets)' | tee source-proof.txt
+          else
+            echo 'APK download unavailable; compiling actual Pu source, not recreating its UI.'
+            cd pu
+            npm ci --no-audit --no-fund
+            npm run build
+            cd ..
+            cp -a pu/dist/. site/
+            echo 'SOURCE=Pu main (real compiled webapp); release APK unavailable' | tee source-proof.txt
+          fi
+          echo "PU_SHA=$(git -C pu rev-parse HEAD)" | tee -a source-proof.txt
+          test -s site/index.html
+      - name: Prepare original brand, dishes, fonts (from Pu)
+        shell: bash
+        run: |
+          set -euo pipefail
+          D=videos/wawasan-film/public/assets
+          mkdir -p "$D"
+          cp pu/public/assets/brand/wawasan_logo.png "$D/logo.png"
+          cp pu/public/assets/heritage/batik_vector_pattern.jpg "$D/batik.jpg"
+          cp pu/public/assets/fonts/wawasan-ui-0.woff2 "$D/outfit.woff2"
+          cp pu/public/assets/dishes/cutouts/nasi_lemak_biasa.webp "$D/nasi.webp"
+          cp pu/public/assets/dishes/cutouts/rendang_daging.webp "$D/rendang.webp"
+          cp pu/public/assets/dishes/cutouts/soto_ayam.webp "$D/soto.webp"
+          ls -lh "$D"
+      - name: Install Remotion, browser capture and Chromium
+        shell: bash
+        working-directory: videos/wawasan-film
+        run: |
+          set -euo pipefail
+          VERSION="$(npm view remotion version)"
+          npm install --no-fund --no-audit --no-save "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19 playwright@1.56.1
+          npx playwright install --with-deps chromium
+          npx remotion browser ensure
+      - name: Capture genuine interactive APK/web screens at two sizes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory site >/tmp/wawasan-local.log 2>&1 &
+          for i in $(seq 1 35); do
+            if curl -fsS 'http://127.0.0.1:4173/' >/dev/null; then break; fi
+            sleep 1
+          done
+          cd videos/wawasan-film
+          WAWASAN_CAPTURE_URL='http://127.0.0.1:4173/' node scripts/capture.mjs
+          for n in phone-home phone-order wide-home wide-order; do
+            test -s "public/assets/$n.png"
+          done
+      - name: Render two 30-second motion compositions in Motiontest
+        shell: bash
+        working-directory: videos/wawasan-film
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          npx remotion render src/index.ts WawasanAPK out/Wawasan_APK_Cinematic_30s.mp4 --codec=h264 --crf=18 --concurrency=2
+          npx remotion render src/index.ts WawasanWebapp out/Wawasan_Webapp_Cinematic_30s.mp4 --codec=h264 --crf=18 --concurrency=2
+      - name: Validate video durations, frame count and inspect keyframes
+        shell: bash
+        working-directory: videos/wawasan-film
+        run: |
+          set -euo pipefail
+          for mode in APK Webapp; do
+            f="out/Wawasan_"$mode"_Cinematic_30s.mp4"
+            test -s "$f"
+            frames="$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "$f")"
+            duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f")"
+            echo "$f frames=$frames duration=$duration"
+            [[ "$frames" == 900 ]] || exit 7
+            ffmpeg -hide_banner -loglevel error -i "$f" -vf "select='eq(n,60)+eq(n,205)+eq(n,350)+eq(n,500)+eq(n,695)+eq(n,835)',scale=480:-1,tile=3x2" -frames:v 1 "out/Wawasan_"$mode"_ContactSheet.jpg" -y
+            test -s "out/Wawasan_"$mode"_ContactSheet.jpg"
+          done
+      - name: Copy source audit
+        run: cp source-proof.txt videos/wawasan-film/out/source-proof.txt
+      - name: Upload both finished films and inspection frames
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wawasan-Motiontest-Two-Films
+          path: videos/wawasan-film/out/
+          if-no-files-found: error
+          retention-days: 30
