@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Img, OffthreadVideo, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {BEAT_FRAMES, BEAT_OFFSET, CUTS} from './musicGrid';
 
 // WAWASAN / THE RHYTHM OF FLAVOUR
@@ -90,11 +90,13 @@ const Still:React.FC<{name:string}>=({name})=>(
     width:'100%',height:'100%',objectFit:'fill',display:'block'
   }}/>
 );
-const Clip:React.FC<{name:string}>=({name})=>(
-  <OffthreadVideo muted src={staticFile('frames/clips/'+name+'.mp4')} style={{
+const Clip:React.FC<{name:string}>=({name})=>{
+  const frame=Math.max(0,Math.floor(useCurrentFrame()));
+  const frameName=String(frame).padStart(4,'0');
+  return <Img src={staticFile('frames/sequences/'+name+'/'+frameName+'.jpg')} style={{
     width:'100%',height:'100%',objectFit:'fill',display:'block'
-  }}/>
-);
+  }}/>;
+};
 const Glint:React.FC<{f:number;at:number;light?:boolean}>=({f,at,light=false})=>{
   const v=Math.max(0,1-Math.abs(f-at)/5);
   return <AbsoluteFill style={{background:light?P.cream:P.orange,opacity:v*.17,pointerEvents:'none'}}/>;
@@ -239,10 +241,10 @@ const Menu:React.FC<{duration:number}>=({duration})=>{
       {'\n'}ENJOY.</Kinetic>
     <Device x={-360+105*enter} y={214} scale={.58+.06*enter} roll={-8+4*enter}
       tilt={12-7*enter} opacity={enter*exit}>
-      <Sequence from={0} durationInFrames={Math.min(duration,106)} layout="none">
+      <Sequence from={0} durationInFrames={Math.min(duration,100)} layout="none">
         <Clip name="menu"/>
       </Sequence>
-      <Sequence from={106} durationInFrames={Math.max(1,duration-106)} layout="none">
+      <Sequence from={100} durationInFrames={Math.max(1,duration-100)} layout="none">
         <Still name="order-dishes"/>
       </Sequence>
     </Device>

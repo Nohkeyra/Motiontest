@@ -25,14 +25,18 @@ for item in data['examples']:
     start=max(0.0,float(data['markers'][item['marker']])-0.35)
     length=min(float(item['seconds']),duration-start-0.08)
     if length<1.2: raise SystemExit('Too little app footage for '+item['file'])
-    output=clips/item['file']
+    # Decoding OffthreadVideo inside moving 3D layers produced blank/sliver
+    # frames. Use an honest frame-accurate JPEG sequence from the same recording.
+    name=pathlib.Path(item['file']).stem
+    folder=root/'sequences'/name
+    folder.mkdir(parents=True,exist_ok=True)
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',
       f'{start:.4f}','-i',str(video),'-t',f'{length:.4f}','-vf',
-      'fps=30,scale=864:1800:flags=lanczos','-an','-c:v','libx264',
-      '-preset','veryfast','-crf','21','-pix_fmt','yuv420p',
-      '-movflags','+faststart',str(output)],check=True)
-    if output.stat().st_size<30000: raise SystemExit('Empty clip '+item['file'])
-    index.append({'file':item['file'],'action':item['marker'],
+      'fps=30,scale=864:1800:flags=lanczos','-q:v','3','-start_number','0',
+      str(folder/'%04d.jpg')],check=True)
+    frames=len(list(folder.glob('*.jpg')))
+    if frames < 35: raise SystemExit('Insufficient real frames for '+name)
+    index.append({'sequence':name,'frames':frames,'action':item['marker'],
                   'start_original':start,'duration':length})
 (clips/'index.json').write_text(json.dumps(index,indent=2))
 print('Prepared real UI clips:',json.dumps(index))
