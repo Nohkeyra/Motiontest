@@ -22,10 +22,10 @@ return <div style={{position:'absolute',left:x,top:y,...strong,fontSize:size,col
 }
 function Device({wide,f,at,src,small=false,sequence,sequenceAt,sequenceLength=0}:{wide:boolean,f:number,at:number,src:string,small?:boolean,sequence?:string,sequenceAt?:number,sequenceLength?:number}){
 const p=spring({frame:f-at,fps:30,config:{damping:22,stiffness:92}});
-const width=wide?(small?970:1200):(small?530:615);
-const height=wide?(small?645:780):(small?1160:1315);
-const left=wide?(small?850:650):(small?405:390);
-const top=wide?(small?160:145):(small?550:520);
+const width=wide?(small?870:960):(small?530:615);
+const height=wide?(small?590:645):(small?1160:1315);
+const left=wide?(small?900:870):(small?405:390);
+const top=wide?(small?220:230):(small?550:520);
 return <div style={{position:'absolute',left,top,width,height,perspective:1600,opacity:clip(p),
 transform:'perspective(1500px) translateX('+((1-p)*950)+'px) translateY('+((1-p)*120)+'px) rotate('+((1-p)*9)+'deg) rotateY('+(-7+Math.sin(f/110)*3)+'deg)',transformOrigin:'center'}}>
 <div style={{position:'absolute',inset:-16,borderRadius:wide?40:86,background:'linear-gradient(120deg,#CB9358,#3D281E 53%,#C59A68)',boxShadow:'0 50px 110px #0009'}}/>
@@ -61,7 +61,7 @@ return <div style={{position:'absolute',left:wide?95:78,top:wide?130:125,opacity
 }
 function Route({f,wide}:{f:number,wide:boolean}){
 const progress=ramp(f,455,586);
-const left=wide?1070:55,top=wide?180:820,scale=wide?1:1;
+const left=wide?910:55,top=wide?180:820,scale=wide?1:1;
 return <div style={{position:'absolute',left,top,width:930,height:620,borderRadius:55,overflow:'hidden',background:'linear-gradient(140deg,#47352D,#241A17)',border:'3px solid #765443',boxShadow:'0 30px 75px #0008',opacity:ramp(f,448,473)}}>
 {Array.from({length:12},(_,i)=><div key={i} style={{position:'absolute',left:i*85,top:0,bottom:0,width:1,background:'#9B806D',opacity:.17}}/>)}
 {Array.from({length:8},(_,i)=><div key={i} style={{position:'absolute',left:0,right:0,top:i*85,height:1,background:'#9B806D',opacity:.17}}/>)}
@@ -99,7 +99,7 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 <Punch f={f} at={237} x={wide?105:90} y={wide?890:1690} size={wide?74:80} word="NEXT PLEASE!" color={A}/>
 </div>
 <div style={{position:'absolute',inset:0,opacity:c}}>
-<Head f={f} at={277} wide={wide} kicker="02 / ORDER" title={wide?'RASA.\nDALAM SATU TAP.':'MENU.\nRASA.\nSIAP.'} desc="Menu Wawasan daripada tempahan sebenar."/>
+<Head f={f} at={277} wide={wide} kicker="02 / ORDER" title={wide?'RASA.\nDALAM\nSATU TAP.':'MENU.\nRASA.\nSIAP.'} desc="Menu Wawasan daripada tempahan sebenar."/>
 <Device wide={wide} f={f} at={296} src={wide?'wide-menu.png':'phone-home.png'} sequence={wide?'desktop-menu':'menu'} sequenceAt={335} sequenceLength={96}/>
 <Food f={f} at={334} src="nasi.webp" x={wide?1170:5} y={wide?550:970} sz={wide?360:420}/>
 <Food f={f} at={356} src="rendang.webp" x={wide?1630:670} y={wide?200:390} sz={wide?295:350}/>
