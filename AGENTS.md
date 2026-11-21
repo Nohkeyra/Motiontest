@@ -43,3 +43,16 @@ The main application is Nohkeyra/Pu. Do not change it for video production.
 - CI `.github/workflows/wawasan-render-loop-qa.yml` runs the loop and validates the encoded MP4, dimensions, frame count, FPS, full decode, nonblank samples, motion variation and the visible first/last seam.
 - For future renders, `python3 scripts/render-with-qa.py --composition WawasanSeamlessLoop --output out/wawasan-seamless-loop.mp4 --frames 120 --seam --expected-audio none` performs a maximum of **two** attempts and exports QA logs.
 - This workflow is only an isolated production check. Do not automatically change `MasterCut`, selected music, or the main Android app; seamless assets must be reviewed before being incorporated into final edits.
+
+## Cinematic transitions and brand logo (Remotion)
+
+- Use only @remotion/transitions at the same pinned version as remotion (4.0.545).
+- Reusable presets are in videos/wawasan-authentic/src/transitions/CinematicTransitions.tsx:
+  fade, kinetic slide, directional wipe and clock wipe.
+- The actual unmodified logo is at public/brand/wawasan_logo.svg. It is copied
+  byte-for-byte from Nohkeyra/Pu/public/assets/brand/wawasan_logo.svg,
+  original Git blob SHA 1ad31cbafedcd51350573e3b3f3261bde53de3ad.
+- Animate the containing logo layer only; never recolor or reconstruct its paths.
+- WawasanAnimatedLogoPreview (4 seconds) and WawasanCinematicTransitions
+  (8 seconds) are isolated preview compositions. No invented app UI appears.
+- They do not alter MasterCut, its music/SFX choices, the APK or the Pu repo.

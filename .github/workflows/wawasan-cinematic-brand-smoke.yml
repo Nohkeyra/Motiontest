@@ -1,0 +1,96 @@
+name: Wawasan official cinematic transitions and authentic logo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-cinematic-brand-smoke.yml'
+      - 'videos/wawasan-authentic/src/brand/**'
+      - 'videos/wawasan-authentic/src/transitions/**'
+      - 'videos/wawasan-authentic/public/brand/**'
+      - 'videos/wawasan-authentic/package.json'
+
+permissions:
+  contents: write
+
+jobs:
+  transitions-brand-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exactly pinned official transition package
+        run: |
+          npm install --package-lock-only --no-audit --no-fund
+          npm ci --no-audit --no-fund
+          npm ls remotion @remotion/cli @remotion/transitions
+          git -C "$GITHUB_WORKSPACE" hash-object videos/wawasan-authentic/public/brand/wawasan_logo.svg | grep -Fx '1ad31cbafedcd51350573e3b3f3261bde53de3ad'
+      - name: Provision Remotion render browser and ffmpeg
+        run: |
+          npx remotion browser ensure
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Render authentic logo and cinematic transition MP4 previews
+        run: |
+          mkdir -p out
+          npx remotion still src/index.ts WawasanAnimatedLogoPreview out/logo-early.png --frame=12
+          npx remotion still src/index.ts WawasanAnimatedLogoPreview out/logo-revealed.png --frame=70
+          npm run render:logo
+          npm run render:transitions
+      - name: Verify encoded MP4, dimensions, duration, audio and motion
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,subprocess,hashlib,struct
+          for basename,seconds in [('wawasan-animated-logo',4),('wawasan-cinematic-transitions',8)]:
+            path=Path('out/'+basename+'.mp4')
+            assert path.stat().st_size>65000, path
+            d=json.loads(subprocess.check_output(['ffprobe','-v','error',
+              '-show_entries','format=duration:stream=codec_type,width,height,r_frame_rate',
+              '-of','json',str(path)]))
+            video=next(s for s in d['streams'] if s.get('codec_type')=='video')
+            assert (video['width'],video['height'])==(1080,1920)
+            assert video['r_frame_rate']=='30/1'
+            assert abs(float(d['format']['duration'])-seconds)<.12
+            assert not any(s.get('codec_type')=='audio' for s in d['streams']), 'Unexpected soundtrack'
+            subprocess.run(['ffmpeg','-nostdin','-v','error','-i',str(path),'-f','null','-'],check=True)
+            print('Verified:',basename,seconds,'seconds')
+          a=Path('out/logo-early.png').read_bytes()
+          b=Path('out/logo-revealed.png').read_bytes()
+          assert a[:8]==b'\x89PNG\r\n\x1a\n'
+          assert b[:8]==b'\x89PNG\r\n\x1a\n'
+          assert struct.unpack('>II',a[16:24])==(1080,1920)
+          assert hashlib.sha256(a).digest()!=hashlib.sha256(b).digest(), 'Logo not animated'
+          print('Animated logo frames are distinct.')
+          PY
+      - name: Commit verified dependency lock
+        run: |
+          git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
+          git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$GITHUB_WORKSPACE" add videos/wawasan-authentic/package-lock.json
+          if git -C "$GITHUB_WORKSPACE" diff --cached --quiet; then
+            echo "Transition lockfile already pinned."
+            exit 0
+          fi
+          git -C "$GITHUB_WORKSPACE" commit -m "build(remotion): lock verified official cinematic transitions"
+          git -C "$GITHUB_WORKSPACE" fetch origin main
+          git -C "$GITHUB_WORKSPACE" rebase origin/main
+          git -C "$GITHUB_WORKSPACE" push origin HEAD:main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wawasan-cinematic-brand-proof
+          path: |
+            videos/wawasan-authentic/out/wawasan-animated-logo.mp4
+            videos/wawasan-authentic/out/wawasan-cinematic-transitions.mp4
+            videos/wawasan-authentic/out/logo-early.png
+            videos/wawasan-authentic/out/logo-revealed.png
+          retention-days: 14
+          if-no-files-found: warn

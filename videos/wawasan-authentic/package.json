@@ -13,7 +13,9 @@
     "check:sfx": "python3 ../../scripts/verify-wawasan-sfx.py --input public/audio/sfx",
     "render:sfx": "remotion render src/index.ts WawasanSfxPreview out/wawasan-sfx-preview.mp4 --codec=h264 --crf=22 --concurrency=2",
     "render:loop": "remotion render src/index.ts WawasanSeamlessLoop out/wawasan-seamless-loop.mp4 --codec=h264 --crf=18 --concurrency=2 --gl=swangle",
-    "verify:loop": "python3 ../../scripts/verify-render-loop.py --input out/wawasan-seamless-loop.mp4 --fps 30 --frames 120 --width 1080 --height 1920 --seam --expected-audio none --report out/loop-render-qc/qa-report.json"
+    "verify:loop": "python3 ../../scripts/verify-render-loop.py --input out/wawasan-seamless-loop.mp4 --fps 30 --frames 120 --width 1080 --height 1920 --seam --expected-audio none --report out/loop-render-qc/qa-report.json",
+    "render:logo": "remotion render src/index.ts WawasanAnimatedLogoPreview out/wawasan-animated-logo.mp4 --codec=h264 --crf=19 --concurrency=2",
+    "render:transitions": "remotion render src/index.ts WawasanCinematicTransitions out/wawasan-cinematic-transitions.mp4 --codec=h264 --crf=19 --concurrency=2"
   },
   "dependencies": {
     "remotion": "4.0.545",
@@ -26,7 +28,8 @@
     "@remotion/paths": "4.0.545",
     "@remotion/shapes": "4.0.545",
     "@remotion/lottie": "4.0.545",
-    "lottie-web": "5.13.0"
+    "lottie-web": "5.13.0",
+    "@remotion/transitions": "4.0.545"
   },
   "devDependencies": {
     "@types/three": "0.187.0"

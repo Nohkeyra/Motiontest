@@ -8,8 +8,12 @@ import {WawasanMotionAddonsSmoke} from './MotionAddonsSmoke';
 import {EffectsShowcase} from './effects/EffectsShowcase';
 import {WawasanSfxPreview} from './audio/SfxPreview';
 import {WawasanSeamlessLoop} from './loop/LoopShowcase';
+import {WawasanAnimatedLogoPreview} from './brand/WawasanLogoMotion';
+import {WawasanCinematicTransitions} from './transitions/CinematicTransitions';
 export const RemotionRoot: React.FC = () => (
   <>
+  <Composition id="WawasanAnimatedLogoPreview" component={WawasanAnimatedLogoPreview} durationInFrames={120} fps={30} width={1080} height={1920} />
+  <Composition id="WawasanCinematicTransitions" component={WawasanCinematicTransitions} durationInFrames={240} fps={30} width={1080} height={1920} />
   <Composition id="WawasanSeamlessLoop" component={WawasanSeamlessLoop} durationInFrames={120} fps={30} width={1080} height={1920} />
   <Composition id="WawasanSfxPreview" component={WawasanSfxPreview} durationInFrames={270} fps={30} width={1080} height={1920} />
   <Composition id="WawasanFXShowcase" component={EffectsShowcase} durationInFrames={300} fps={30} width={1080} height={1920} />
