@@ -1,0 +1,93 @@
+name: Wawasan Sound Design Engine - SFX verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-sfx-engine.yml'
+      - 'scripts/generate-wawasan-sfx.py'
+      - 'scripts/verify-wawasan-sfx.py'
+      - 'videos/wawasan-authentic/src/audio/**'
+      - 'videos/wawasan-authentic/src/Root.tsx'
+      - 'videos/wawasan-authentic/package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-sfx:
+    name: Generate, mix and validate original Wawasan SFX
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: videos/wawasan-authentic/package-lock.json
+      - name: Install pinned video dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Generate all original procedural effects
+        run: |
+          npm run prepare:sfx
+          npm run check:sfx
+      - name: Prove repeatable SFX generation and expected cue manifest
+        run: |
+          (cd public/audio/sfx && sha256sum *.wav manifest.json) > /tmp/wawasan-sfx-sha-before
+          npm run prepare:sfx
+          (cd public/audio/sfx && sha256sum *.wav manifest.json) > /tmp/wawasan-sfx-sha-after
+          diff -u /tmp/wawasan-sfx-sha-before /tmp/wawasan-sfx-sha-after
+          npm run check:sfx
+      - name: Install renderer browser and audio analysis tools
+        run: |
+          npx remotion browser ensure
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Render independent frame-synced SFX demonstration
+        run: |
+          mkdir -p out
+          npm run render:sfx
+      - name: Validate actual video and stereo audio, prevent clipping
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, json, re
+          p=Path('out/wawasan-sfx-preview.mp4')
+          assert p.is_file() and p.stat().st_size>90000, 'SFX preview missing'
+          metadata=json.loads(subprocess.check_output(['ffprobe','-v','error',
+             '-show_entries','format=duration:stream=codec_type,width,height,sample_rate,channels',
+             '-of','json',str(p)]))
+          vid=next(x for x in metadata['streams'] if x['codec_type']=='video')
+          aud=next(x for x in metadata['streams'] if x['codec_type']=='audio')
+          assert (vid['width'],vid['height'])==(1080,1920),vid
+          assert (int(aud['sample_rate']),aud['channels'])==(48000,2),aud
+          assert 8.9<float(metadata['format']['duration'])<9.2,metadata
+          subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],
+                         check=True,stdout=subprocess.DEVNULL)
+          report=subprocess.run(['ffmpeg','-hide_banner','-i',str(p),
+             '-af','volumedetect','-vn','-f','null','-'],
+             stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,check=True)
+          stats=report.stderr
+          peak=re.search(r'max_volume:\s*([-\d.]+) dB',stats)
+          mean=re.search(r'mean_volume:\s*([-\d.]+) dB',stats)
+          assert peak and mean,'FFmpeg volumedetect did not report audio levels'
+          assert float(peak.group(1))<=-1.0, 'Decoded output too hot (clipping risk)'
+          assert float(mean.group(1))>-65,'Output audio is effectively silent'
+          print('SFX verified: 9.0sec, 1080x1920, 48kHz stereo, peak:',
+                peak.group(1),'dBFS, mean:',mean.group(1),'dBFS')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wawasan-original-sfx-library-and-preview
+          path: |
+            videos/wawasan-authentic/public/audio/sfx/*.wav
+            videos/wawasan-authentic/public/audio/sfx/manifest.json
+            videos/wawasan-authentic/out/wawasan-sfx-preview.mp4
+          retention-days: 14
+          if-no-files-found: warn
