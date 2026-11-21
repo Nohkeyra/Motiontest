@@ -105,7 +105,7 @@ const Opening:React.FC<{duration:number}>=({duration})=>{
   return <Stage batik={.075}>
     <Rule/>
     <Mini>RESTORAN WAWASAN · A DIFFERENT KIND OF APP FILM</Mini>
-    <Kinetic f={f} delay={6} top={250} size={165}>GOOD FOOD.
+    <Kinetic f={f} delay={6} top={190} size={135}>GOOD FOOD.
       {'\n'}GOOD FLOW.</Kinetic>
     <div style={{position:'absolute',left:38,top:390,width:950,height:950,
       border:'3px solid rgba(244,165,28,.27)',borderRadius:950,
@@ -146,11 +146,11 @@ const Heritage:React.FC<{duration:number}>=({duration})=>{
   </Stage>;
 };
 const Theme:React.FC<{duration:number}>=({duration})=>{
-  const f=useCurrentFrame(),enter=s(f,0,24),transition=s(f,38,79);
+  const f=useCurrentFrame(),enter=s(f,-6,17),transition=s(f,38,79);
   const pulse=beat(f)*.014;
   return <Stage batik={.08}>
     <Rule/><Mini>THE REAL WAWASAN WELCOME</Mini>
-    <Kinetic f={f} delay={5} size={118} top={167}>LIGHT.
+    <Kinetic f={f} delay={0} size={110} top={157}>LIGHT.
       {'\n'}DARK.
       {'\n'}WAWASAN.</Kinetic>
     <div style={{position:'absolute',width:850,height:990,left:125,top:680,
@@ -256,7 +256,7 @@ const Menu:React.FC<{duration:number}>=({duration})=>{
         scale={sc} angle={-28*(1-p)+(i%2?12:-8)} opacity={alpha}/>;
     })}
     <div style={{position:'absolute',left:565,top:1420,width:490,
-      color:P.ink,fontFamily:font,fontWeight:900,fontSize:52,
+      color:P.ink,fontFamily:font,fontWeight:900,fontSize:43,
       lineHeight:1.0,letterSpacing:-2.2,opacity:enter}}>
       REAL DISH ART
       <div style={{fontSize:23,letterSpacing:3.4,lineHeight:1.9,fontWeight:800}}>
