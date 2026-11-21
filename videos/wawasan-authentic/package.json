@@ -4,6 +4,7 @@
   "version": "0.2.0",
   "scripts": {
     "render:film": "remotion render src/index.ts WawasanFilm out/wawasan-studio-film.mp4 --codec=h264 --crf=18 --concurrency=2",
-    "render:proof": "remotion render src/index.ts AuthenticProof out/authentic-proof.mp4 --codec=h264 --crf=20 --concurrency=2"
+    "render:proof": "remotion render src/index.ts AuthenticProof out/authentic-proof.mp4 --codec=h264 --crf=20 --concurrency=2",
+    "render:master": "remotion render src/index.ts MasterCut out/wawasan-master-cut.mp4 --codec=h264 --crf=18 --concurrency=2"
   }
 }

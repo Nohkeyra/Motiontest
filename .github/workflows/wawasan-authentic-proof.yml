@@ -1,4 +1,4 @@
-name: Wawasan signed APK to 30s studio film
+name: Wawasan APK → Beat-Driven Master Cut
 on:
   workflow_dispatch:
     inputs:
@@ -16,6 +16,9 @@ on:
       - 'scripts/verify.py'
       - 'videos/wawasan-authentic/**'
       - 'scripts/generate-film-score.mjs'
+      - 'scripts/prepare-master-beat.sh'
+      - 'scripts/prepare-interaction-clips.py'
+      - 'scripts/music-beat-grid.py'
 permissions:
   contents: read
 jobs:
@@ -77,29 +80,35 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install FFmpeg and audio analysis dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python3 -m pip install --user 'numpy>=1.26,<3'
+      - name: Cut real UI interaction clips
+        run: python3 ../../scripts/prepare-interaction-clips.py public/frames
+      - name: Download licensed high-energy beat, analyze pulse and snap edits
+        run: |
+          bash ../../scripts/prepare-master-beat.sh
+          python3 ../../scripts/music-beat-grid.py .
       - name: Install matched Remotion versions
         run: |
           VERSION="$(npm view remotion version)"
           npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
       - run: npx remotion browser ensure
-      - name: Build original instrumental sound design
-        run: node ../../scripts/generate-film-score.mjs
-      - name: Render 30-second Wawasan studio film
-        run: npm run render:film
-      - name: Install FFmpeg for independent video checks
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-          ffprobe -version | head -n 1
+      - name: Render beat-driven 30-second master cut
+        run: npm run render:master
+      - name: Report FFmpeg version
+        run: ffprobe -version | head -n 1
       - name: Verify MP4 and extract review frames
-        run: python3 ../../scripts/verify.py video out/wawasan-studio-film.mp4
+        run: python3 ../../scripts/verify.py video out/wawasan-master-cut.mp4
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: wawasan-30s-studio-film
+          name: wawasan-beat-driven-master-cut
           retention-days: 14
           if-no-files-found: error
           path: |
-            videos/wawasan-authentic/out/wawasan-studio-film.mp4
+            videos/wawasan-authentic/out/wawasan-master-cut.mp4
             videos/wawasan-authentic/out/review-frames/*.png
             videos/wawasan-authentic/public/frames/capture.json

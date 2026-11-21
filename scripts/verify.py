@@ -38,10 +38,10 @@ def check_video(filename):
     assert (s['width'],s['height'])==(1080,1920)
     n,d=map(int,s['avg_frame_rate'].split('/'))
     assert abs(n/d-30)<0.1
-    is_film = video.name == 'wawasan-studio-film.mp4'
+    is_film = video.name in {'wawasan-studio-film.mp4','wawasan-master-cut.mp4'}
     expected = 30 if is_film else 9
     assert expected-0.3 < float(data['format']['duration']) < expected+0.3
-    # Validate decode of the actual encoded stream, not just container metadata.
+    # Decode all video frames; no pass on metadata alone.
     subprocess.run(['ffmpeg','-v','error','-i',str(video),'-f','null','-'],check=True)
     out=video.parent/'review-frames'
     out.mkdir(exist_ok=True)
