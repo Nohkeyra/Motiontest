@@ -1,0 +1,67 @@
+name: Wawasan seamless animation loop and bounded render QA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-render-loop-qa.yml'
+      - 'videos/wawasan-authentic/src/loop/**'
+      - 'scripts/render-with-qa.py'
+      - 'scripts/verify-render-loop.py'
+
+permissions:
+  contents: read
+
+jobs:
+  loop-and-qa:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: videos/wawasan-authentic/package-lock.json
+      - name: Install pinned Remotion renderer
+        run: npm ci --no-audit --no-fund
+      - name: Prepare Chromium, WebGL backend and FFmpeg
+        run: |
+          npx remotion browser ensure
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Check cyclic 3D motion math without wall-clock state
+        run: |
+          python3 - <<'PY'
+          from math import pi,sin,cos
+          for cycles in (1,2,3):
+            period=120
+            def orbit(frame):
+              phase=2*pi*((frame*cycles/period)%1)
+              return cos(phase),sin(phase)
+            for a,b in zip(orbit(0),orbit(period)):
+              assert abs(a-b)<1e-12
+            assert abs(orbit(0)[0]-orbit(period//(2*cycles))[0])>1.5
+          print('All sampled orbits return to their initial state.')
+          PY
+      - name: Render 3D loop with bounded retry and encoded-file QA
+        run: |
+          python3 ../../scripts/render-with-qa.py \
+            --composition WawasanSeamlessLoop \
+            --output out/wawasan-seamless-loop.mp4 \
+            --frames 120 --fps 30 --width 1080 --height 1920 \
+            --expected-audio none --seam --attempts 2
+      - name: Upload actual MP4 and per-attempt logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wawasan-seamless-render-loop-and-QA
+          path: |
+            videos/wawasan-authentic/out/wawasan-seamless-loop.mp4
+            videos/wawasan-authentic/out/loop-render-qc/*
+          retention-days: 14
+          if-no-files-found: warn
