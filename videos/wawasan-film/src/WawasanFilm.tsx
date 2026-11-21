@@ -32,7 +32,7 @@ transform:'translateX('+((1-p)*950)+'px) translateY('+((1-p)*120)+'px) rotate('+
 <div style={{position:'absolute',inset:1,background:'#1D1412',borderRadius:wide?25:69,overflow:'hidden',border:'2px solid #D5A367'}}>
 {wide&&<div style={{height:42,background:'#2B221E',display:'flex',alignItems:'center',paddingLeft:25,gap:9}}>
 {[O,A,'#75846D'].map((c,i)=><i key={i} style={{width:12,height:12,borderRadius:'50%',background:c}}/>)}
-<div style={{width:580,marginLeft:80,height:25,lineHeight:'25px',textAlign:'center',background:'#1A1411',color:'#E5D0B4',borderRadius:10,fontSize:15,fontFamily:'Arial'}}>restoran-wawasan.app</div></div>}
+<div style={{width:580,marginLeft:80,height:25,lineHeight:'25px',textAlign:'center',background:'#1A1411',color:'#E5D0B4',borderRadius:10,fontSize:15,fontFamily:'Arial'}}>RESTORAN WAWASAN</div></div>}
 <Img src={file(src)} style={{width:'100%',height:wide?'calc(100% - 42px)':'100%',objectFit:'cover',objectPosition:'top center'}}/>
 {sequence&&sequenceAt!==undefined&&f>=sequenceAt&&f<sequenceAt+sequenceLength&&<Img src={file('sequences/'+sequence+'/'+String(Math.min(sequenceLength-1,Math.floor(f-sequenceAt))).padStart(4,'0')+'.jpg')} style={{position:'absolute',left:0,top:wide?42:0,width:'100%',height:wide?'calc(100% - 42px)':'100%',objectFit:'fill'}}/>}
 </div>
@@ -89,20 +89,21 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 <Punch f={f} at={12} x={wide?105:82} y={wide?235:1115} size={wide?205:196} word="SATU"/>
 <Punch f={f} at={27} x={wide?105:82} y={wide?423:1300} size={wide?230:218} word="TAP." color={A}/>
 <Punch f={f} at={48} x={wide?115:87} y={wide?690:1565} size={wide?53:57} word="REALITI BERLIPAT."/>
-<div style={{position:'absolute',top:wide?80:145,left:wide?108:85,fontSize:24,color:A,fontWeight:900,letterSpacing:5}}>RESTORAN WAWASAN • EST. 1986</div>
+<div style={{position:'absolute',top:wide?80:145,left:wide?108:85,fontSize:24,color:A,fontWeight:900,letterSpacing:5}}>RESTORAN WAWASAN • DIGITAL EXPERIENCE</div>
 </div>
 <div style={{position:'absolute',inset:0,opacity:b}}>
-<Head f={f} at={112} wide={wide} kicker="01 / EXPLORE" title={wide?'RASA.\nDALAM\nSATU TAP.':'PILIH.\nRASA.\nULANG.'} desc="Menu sebenar Wawasan. Tiada rekaan UI tiruan."/>
-<Device wide={wide} f={f} at={116} src={wide?'wide-home.png':'phone-home.png'} sequence={!wide?'started':undefined} sequenceAt={145} sequenceLength={72}/>
-<Food f={f} at={150} src="nasi.webp" x={wide?1170:5} y={wide?550:970} sz={wide?360:420}/>
-<Food f={f} at={172} src="rendang.webp" x={wide?1630:670} y={wide?200:390} sz={wide?295:350}/>
-<Food f={f} at={190} src="soto.webp" x={wide?810:510} y={wide?720:1440} sz={wide?315:340}/>
+<Head f={f} at={112} wide={wide} kicker="01 / EXPLORE" title={wide?'RANCANG\nMAJLIS.':'PILIH.\nSUSUN.\nSIAP.'} desc="Pilih jenis majlis, sesi dan cara penyediaan."/>
+<Device wide={wide} f={f} at={116} src={wide?'wide-order.png':'phone-order.png'} sequence={wide?'desktop':'selection'} sequenceAt={145} sequenceLength={96}/>
+
 <Tap f={f} at={206} x={wide?1420:780} y={wide?620:1180}/>
 <Punch f={f} at={237} x={wide?105:90} y={wide?890:1690} size={wide?74:80} word="NEXT PLEASE!" color={A}/>
 </div>
 <div style={{position:'absolute',inset:0,opacity:c}}>
-<Head f={f} at={277} wide={wide} kicker="02 / ORDER" title={wide?'BINA JAMUAN\nSENDIRI.':'PILIH.\nSUSUN.\nSIAP.'} desc="Tindakan yang bergerak, bukan slideshow."/>
-<Device wide={wide} f={f} at={296} src={wide?'wide-order.png':'phone-order.png'} sequence={wide?'desktop':'selection'} sequenceAt={335} sequenceLength={96}/>
+<Head f={f} at={277} wide={wide} kicker="02 / ORDER" title={wide?'RASA.\nDALAM SATU TAP.':'MENU.\nRASA.\nSIAP.'} desc="Menu Wawasan daripada tempahan sebenar."/>
+<Device wide={wide} f={f} at={296} src={wide?'wide-menu.png':'phone-home.png'} sequence={wide?'desktop-menu':'menu'} sequenceAt={335} sequenceLength={96}/>
+<Food f={f} at={334} src="nasi.webp" x={wide?1170:5} y={wide?550:970} sz={wide?360:420}/>
+<Food f={f} at={356} src="rendang.webp" x={wide?1630:670} y={wide?200:390} sz={wide?295:350}/>
+<Food f={f} at={376} src="soto.webp" x={wide?810:510} y={wide?720:1440} sz={wide?315:340}/>
 <Tap f={f} at={351} x={wide?1370:790} y={wide?500:980}/>
 <div style={{position:'absolute',left:wide?105:100,top:wide?715:1445,display:'flex',gap:17,opacity:ramp(f,355,380)}}>
 {['MAJLIS','MENU','BUTIRAN'].map((s,i)=><div key={i} style={{fontSize:wide?23:25,fontWeight:900,color:i===1?B:K,border:'2px solid '+A,background:i===1?A:'#2C1E19',padding:wide?'16px 26px':'22px 24px',borderRadius:80,transform:'translateY('+(Math.sin(f/14+i)*6)+'px)'}}>{s}</div>)}</div>

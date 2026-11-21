@@ -73,12 +73,21 @@ for(const cfg of [
        await page.waitForTimeout(700);
      }
    }
-   if(recorded.length<1) throw Error('No real desktop app click succeeded; refuse fabricated interaction');
+   const nextButton=page.locator('[data-tour="step1-next"]').first();
+   if(!(await nextButton.count()) || !(await nextButton.isVisible())) throw Error('Desktop next-menu app control unavailable');
+   const nextTime=(Date.now()-captureStarted)/1000;
+   await nextButton.click({timeout:8000});
+   recorded.push({t:nextTime,action:'actual-next-menu'});
+   await page.locator('.customer-order-form[data-step="2"]').waitFor({state:'visible',timeout:25000});
+   await page.evaluate(()=>scrollTo(0,0));
+   await page.waitForTimeout(1400);
+   await page.screenshot({path:path.join(out,'wide-menu.png'),animations:'disabled'});
+   if(recorded.length<4) throw Error('Desktop action sequence incomplete; refuse fabricated interaction');
    await page.waitForTimeout(2000);
    const video=page.video();
    await context.close();
    fs.copyFileSync(await video.path(),path.join(out,'desktop-interaction.webm'));
-   fs.writeFileSync(path.join(out,'desktop-action.json'),JSON.stringify({recorded,first:recorded[0].t},null,2));
+   fs.writeFileSync(path.join(out,'desktop-action.json'),JSON.stringify({recorded,first:recorded[0].t,next:nextTime},null,2));
    console.log('REAL_DESKTOP_CLICKS',JSON.stringify(recorded));
  }else await context.close();
 }

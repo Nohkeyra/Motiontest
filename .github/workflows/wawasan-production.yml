@@ -100,14 +100,17 @@ jobs:
           node videos/wawasan-film/scripts/capture-real.mjs
           python3 scripts/prepare-interaction-clips.py capture
           D=videos/wawasan-film/public/assets
-          mkdir -p "$D/sequences/started" "$D/sequences/selection" "$D/sequences/desktop"
+          mkdir -p "$D/sequences/started" "$D/sequences/selection" "$D/sequences/menu" "$D/sequences/desktop" "$D/sequences/desktop-menu"
           cp capture/sequences/started/*.jpg "$D/sequences/started/"
           cp capture/sequences/selection/*.jpg "$D/sequences/selection/"
-          cp capture/welcome.png "$D/phone-home.png"
+          cp capture/sequences/menu/*.jpg "$D/sequences/menu/"
+          cp capture/order-menu.png "$D/phone-home.png"
           cp capture/order-selected.png "$D/phone-order.png"
           OFFSET="$(node -p "require('./videos/wawasan-film/public/assets/desktop-action.json').first")"
           ffmpeg -hide_banner -loglevel error -y -ss "$OFFSET" -i "$D/desktop-interaction.webm" -vf "fps=30,scale=1440:900,tpad=stop_mode=clone:stop_duration=3" -frames:v 96 "$D/sequences/desktop/%04d.jpg"
-          for n in started selection desktop; do
+          NEXT_OFFSET="$(node -p "require('./videos/wawasan-film/public/assets/desktop-action.json').next")"
+          ffmpeg -hide_banner -loglevel error -y -ss "$NEXT_OFFSET" -i "$D/desktop-interaction.webm" -vf "fps=30,scale=1440:900,tpad=stop_mode=clone:stop_duration=3" -frames:v 96 "$D/sequences/desktop-menu/%04d.jpg"
+          for n in started selection menu desktop desktop-menu; do
             test "$(find "$D/sequences/$n" -maxdepth 1 -name '*.jpg' | wc -l)" -ge "$(if [[ "$n" == started ]]; then echo 72; else echo 96; fi)" || { echo "Not enough real $n frames"; exit 1; }
           done
           python3 scripts/generate-wawasan-sfx.py --output videos/wawasan-film/public/audio/sfx
