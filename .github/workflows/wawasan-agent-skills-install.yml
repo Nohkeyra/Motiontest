@@ -1,0 +1,42 @@
+name: Install Wawasan UIUX and Remotion skills
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-agent-skills-install.yml'
+      - 'scripts/install-video-agent-skills.sh'
+
+# Temporary write scope for publishing verified skills; revert to read-only.
+permissions:
+  contents: write
+
+jobs:
+  install-skills:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch complete pinned skill sources
+        run: bash scripts/install-video-agent-skills.sh
+      - name: Validate UI UX search and Remotion references
+        run: |
+          python3 .agents/skills/ui-ux-pro-max/scripts/search.py \
+            "mobile food ordering interactions" --domain ux > /tmp/wawasan-ux-search.txt
+          test -s /tmp/wawasan-ux-search.txt
+          grep -qi 'remotion' .agents/skills/remotion-best-practices/SKILL.md
+      - name: Publish tested skill trees to repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .agents/skills/ui-ux-pro-max .agents/skills/remotion-best-practices \
+            .agents/skills/MOTION_ADDONS_SOURCES.md
+          if git diff --cached --quiet; then
+            echo "Pinned skills already installed."
+            exit 0
+          fi
+          git commit -m "feat(skills): add UIUX Pro Max and official Remotion best practices"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
