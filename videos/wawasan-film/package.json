@@ -1,0 +1,11 @@
+{
+  "name": "wawasan-cinematic-production",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "capture": "node scripts/capture.mjs",
+    "render": "remotion render src/index.ts WawasanAPK out/Wawasan_APK_Cinematic_30s.mp4 --codec h264 --crf 18 --concurrency 2 && remotion render src/index.ts WawasanWebapp out/Wawasan_Webapp_Cinematic_30s.mp4 --codec h264 --crf 18 --concurrency 2",
+    "compositions": "remotion compositions src/index.ts"
+  }
+}
