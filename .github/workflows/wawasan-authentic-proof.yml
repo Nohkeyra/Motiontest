@@ -94,6 +94,10 @@ jobs:
           python3 ../../scripts/music-beat-grid.py .
       - name: Install reproducible video dependencies
         run: npm ci --no-audit --no-fund
+      - name: Prepare optional original Wawasan SFX library (no changes to soundtrack)
+        run: |
+          npm run prepare:sfx
+          npm run check:sfx
       - run: npx remotion browser ensure
       - name: Render beat-driven 30-second master cut
         run: npm run render:master
