@@ -12,7 +12,7 @@ on:
       - 'videos/wawasan-authentic/src/Root.tsx'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify-3d:
@@ -56,6 +56,18 @@ jobs:
           assert images[0].read_bytes()!=images[1].read_bytes(), '3D frames unchanged'
           print('Two distinct 1080x1920 rendered 3D frames validated.')
           PY
+      - name: Commit resolved lockfile once, then lock dependency versions
+        if: success()
+        run: |
+          if git -C "$GITHUB_WORKSPACE" ls-files --error-unmatch videos/wawasan-authentic/package-lock.json >/dev/null 2>&1; then
+            echo "Tracked lockfile already exists; no commit required."
+            exit 0
+          fi
+          git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
+          git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$GITHUB_WORKSPACE" add videos/wawasan-authentic/package-lock.json
+          git -C "$GITHUB_WORKSPACE" commit -m "build(video): lock verified 3D and Remotion dependencies"
+          git -C "$GITHUB_WORKSPACE" push origin HEAD:main
       - name: Export verified frames and generated package lock
         if: always()
         uses: actions/upload-artifact@v4
