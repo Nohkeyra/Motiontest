@@ -1,0 +1,15 @@
+{
+  "name": "wawasan-hyperframes-lab",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Isolated HTML motion demo; Remotion remains main renderer.",
+  "scripts": {
+    "lint": "hyperframes lint ./index.html",
+    "render": "hyperframes render -c ./index.html -o ./out/wawasan-hyperframes.mp4",
+    "doctor": "hyperframes doctor"
+  },
+  "devDependencies": {
+    "hyperframes": "0.9.72",
+    "gsap": "3.14.2"
+  }
+}

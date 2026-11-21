@@ -1,0 +1,62 @@
+name: Wawasan HyperFrames isolated test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-hyperframes-lab.yml'
+      - 'videos/hyperframes-wawasan/**'
+
+permissions:
+  contents: read
+
+jobs:
+  hyperframes-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: videos/hyperframes-wawasan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Install pinned HyperFrames and GSAP
+        run: npm install --no-audit --no-fund
+      - name: Confirm HyperFrames installation
+        run: |
+          node -v
+          npx hyperframes info
+      - name: Provision browser
+        run: npx hyperframes browser ensure
+      - name: Lint real HTML composition
+        run: npm run lint
+      - name: Render independent 4-second studio sample
+        run: |
+          mkdir -p out
+          npm run render
+      - name: Check format and duration
+        run: |
+          ffprobe -v error -show_entries format=duration:stream=width,height,r_frame_rate -of json out/wawasan-hyperframes.mp4
+          python3 - <<'PY'
+          import json,subprocess,pathlib
+          p=pathlib.Path('out/wawasan-hyperframes.mp4')
+          assert p.is_file() and p.stat().st_size>150000, 'Empty HyperFrames render'
+          v=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration:stream=width,height','-of','json',str(p)]))
+          streams=[s for s in v['streams'] if 'width' in s]
+          assert streams and (streams[0]['width'],streams[0]['height'])==(1080,1920)
+          assert 3.7<float(v['format']['duration'])<4.4
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wawasan-hyperframes-lab
+          path: videos/hyperframes-wawasan/out/wawasan-hyperframes.mp4
+          retention-days: 7
+          if-no-files-found: warn
