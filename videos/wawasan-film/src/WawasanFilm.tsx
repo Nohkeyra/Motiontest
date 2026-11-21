@@ -131,7 +131,7 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 <div style={{position:'absolute',left:'50%',top:wide?980:1590,width:wide?900:760,height:5,background:A,transform:'translateX(-50%) scaleX('+ramp(f,838,864)+')'}}/>
 </div>
 {[99,267,432,630,773].map(at=><Flash key={at} f={f} at={at} wide={wide}/>)}
-{([[0,'logo_impact',0.28],[102,'whoosh',0.25],[150,'card_expand',0.24],[204,'tap',0.36],[267,'whoosh',0.28],[351,'tap',0.4],[432,'whoosh',0.28],[447,'map_trace',0.28],[630,'paper_swipe',0.25],[774,'logo_impact',0.29],[830,'shimmer',0.22]] as Array<[number,string,number]>).map(([at,name,volume])=><Sequence key={at} from={at}><Audio src={staticFile('audio/sfx/'+name+'.wav')} volume={volume}/></Sequence>)}}
+{([[0,'logo_impact',0.28],[102,'whoosh',0.25],[150,'card_expand',0.24],[204,'tap',0.36],[267,'whoosh',0.28],[351,'tap',0.4],[432,'whoosh',0.28],[447,'map_trace',0.28],[630,'paper_swipe',0.25],[774,'logo_impact',0.29],[830,'shimmer',0.22]] as Array<[number,string,number]>).map(([at,name,volume])=><Sequence key={at} from={at}><Audio src={staticFile('audio/sfx/'+name+'.wav')} volume={volume}/></Sequence>)}
 <div style={{position:'absolute',left:wide?80:70,bottom:wide?40:65,display:'flex',gap:18,alignItems:'center',opacity:.68}}>
 <span style={{fontSize:wide?20:22,fontWeight:900,letterSpacing:3}}>RW / 2027</span>
 <span style={{height:3,width:wide?250:135,background:'#6A5344',position:'relative'}}><span style={{position:'absolute',left:0,top:0,height:'100%',width:(f/9)+'%',background:A}}/></span>
