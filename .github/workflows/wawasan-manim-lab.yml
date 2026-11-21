@@ -46,14 +46,19 @@ jobs:
           clips=list(pathlib.Path('out').rglob('WawasanRoute.mp4'))
           assert len(clips)==1,clips
           p=clips[0]
-          assert p.stat().st_size>100000, 'Empty Manim MP4'
+          assert p.stat().st_size>5000, 'Missing or truncated Manim MP4'
           v=json.loads(subprocess.check_output([
             'ffprobe','-v','error','-show_entries','format=duration:stream=width,height',
             '-of','json',str(p)]))
           stream=next(s for s in v['streams'] if 'width' in s)
           assert (stream['width'],stream['height'])==(360,640),stream
           assert float(v['format']['duration'])>3.0,v
-          print('Validated Manim clip:',p)
+          frames=int(subprocess.check_output(['ffprobe','-v','error','-count_frames',
+            '-select_streams','v:0','-show_entries','stream=nb_read_frames',
+            '-of','default=nw=1:nk=1',str(p)]).strip())
+          assert frames>=90, f'Incomplete animated output: {frames} frames'
+          subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],check=True)
+          print('Decoded Manim MP4 successfully:',p,frames,'frames')
           PY
       - name: Prepare optional Remotion-importable MP4
         run: |
