@@ -10,10 +10,9 @@ on:
       - 'videos/wawasan-authentic/package.json'
       - 'videos/wawasan-authentic/package-lock.json'
 
-# Temporarily allows committing the tested package lock. Restore read-only
-# after the lockfile exists and the compositional render passes.
+# Read-only: dependency versions are locked and committed in package-lock.json.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify-addons:
@@ -27,9 +26,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Resolve exact additional Remotion dependencies
+          cache: npm
+          cache-dependency-path: videos/wawasan-authentic/package-lock.json
+      - name: Install verified, locked Remotion dependencies
         run: |
-          npm install --package-lock-only --no-audit --no-fund
           npm ci --no-audit --no-fund
           npm ls remotion @remotion/cli @remotion/three @remotion/paths \
             @remotion/shapes @remotion/lottie lottie-web
@@ -66,19 +66,6 @@ jobs:
           subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],check=True)
           print('Passed: pinned dependencies + SVG path + shapes + Lottie + MP4.')
           PY
-      - name: Publish tested package-lock file
-        run: |
-          git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
-          git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C "$GITHUB_WORKSPACE" add videos/wawasan-authentic/package-lock.json
-          if git -C "$GITHUB_WORKSPACE" diff --cached --quiet; then
-            echo "Pinned dependency lockfile already synchronized."
-            exit 0
-          fi
-          git -C "$GITHUB_WORKSPACE" commit -m "build(remotion): lock validated paths shapes and lottie packages"
-          git -C "$GITHUB_WORKSPACE" fetch origin main
-          git -C "$GITHUB_WORKSPACE" rebase origin/main
-          git -C "$GITHUB_WORKSPACE" push origin HEAD:main
       - uses: actions/upload-artifact@v4
         if: always()
         with:
