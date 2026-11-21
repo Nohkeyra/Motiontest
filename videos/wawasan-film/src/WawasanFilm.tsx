@@ -22,12 +22,12 @@ return <div style={{position:'absolute',left:x,top:y,...strong,fontSize:size,col
 }
 function Device({wide,f,at,src,small=false,sequence,sequenceAt,sequenceLength=0}:{wide:boolean,f:number,at:number,src:string,small?:boolean,sequence?:string,sequenceAt?:number,sequenceLength?:number}){
 const p=spring({frame:f-at,fps:30,config:{damping:22,stiffness:92}});
-const width=wide?(small?970:1200):(small?590:745);
-const height=wide?(small?645:780):(small?1260:1600);
-const left=wide?(small?850:650):(small?340:220);
-const top=wide?(small?160:145):(small?280:175);
+const width=wide?(small?970:1200):(small?530:615);
+const height=wide?(small?645:780):(small?1160:1315);
+const left=wide?(small?850:650):(small?405:390);
+const top=wide?(small?160:145):(small?550:520);
 return <div style={{position:'absolute',left,top,width,height,perspective:1600,opacity:clip(p),
-transform:'translateX('+((1-p)*950)+'px) translateY('+((1-p)*120)+'px) rotate('+((1-p)*9)+'deg) rotateY('+(-7+Math.sin(f/110)*3)+'deg)',transformOrigin:'center'}}>
+transform:'perspective(1500px) translateX('+((1-p)*950)+'px) translateY('+((1-p)*120)+'px) rotate('+((1-p)*9)+'deg) rotateY('+(-7+Math.sin(f/110)*3)+'deg)',transformOrigin:'center'}}>
 <div style={{position:'absolute',inset:-16,borderRadius:wide?40:86,background:'linear-gradient(120deg,#CB9358,#3D281E 53%,#C59A68)',boxShadow:'0 50px 110px #0009'}}/>
 <div style={{position:'absolute',inset:1,background:'#1D1412',borderRadius:wide?25:69,overflow:'hidden',border:'2px solid #D5A367'}}>
 {wide&&<div style={{height:42,background:'#2B221E',display:'flex',alignItems:'center',paddingLeft:25,gap:9}}>
