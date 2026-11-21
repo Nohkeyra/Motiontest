@@ -1,0 +1,76 @@
+name: Wawasan visual effects preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-fx-preview.yml'
+      - 'videos/wawasan-authentic/src/effects/**'
+      - 'videos/wawasan-authentic/src/Root.tsx'
+      - 'videos/wawasan-authentic/package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  preview-fx:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: videos/wawasan-authentic/package-lock.json
+      - name: Install locked renderer
+        run: npm ci --no-audit --no-fund
+      - name: Install renderer browser
+        run: npx remotion browser ensure
+      - name: Render one preview frame per effect
+        run: |
+          mkdir -p out/fx-frames
+          for frame in 28 89 149 209 269; do
+            npx remotion still src/index.ts WawasanFXShowcase "out/fx-frames/$frame.png" --frame="$frame"
+          done
+      - name: Verify each distinct frame and output format
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct,hashlib
+          fs=sorted(Path('out/fx-frames').glob('*.png'))
+          assert len(fs)==5, 'Five FX previews required'
+          hashes=[]
+          for f in fs:
+              raw=f.read_bytes()
+              assert raw[:8]==b'\x89PNG\r\n\x1a\n', f'Invalid PNG: {f}'
+              assert struct.unpack('>II',raw[16:24])==(1080,1920)
+              assert len(raw)>30000, f'Unusually small frame: {f}'
+              hashes.append(hashlib.sha256(raw).hexdigest())
+          assert len(set(hashes))==5, 'FX render frames are not distinct'
+          print('Verified five FX visual previews.')
+          PY
+      - name: Render standalone effects preview MP4
+        run: npm run render:fx
+      - name: Validate 10 second encoded video
+        run: |
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -of default=nw=1 out/wawasan-visual-effects.mp4
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('out/wawasan-visual-effects.mp4')
+          assert p.stat().st_size > 350000, 'MP4 unexpectedly small'
+          PY
+      - name: Upload effects tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wawasan-effects-preview
+          path: |
+            videos/wawasan-authentic/out/fx-frames/*.png
+            videos/wawasan-authentic/out/wawasan-visual-effects.mp4
+          if-no-files-found: warn
+          retention-days: 7
