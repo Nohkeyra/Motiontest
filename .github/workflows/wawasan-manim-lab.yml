@@ -1,0 +1,70 @@
+name: Wawasan Manim route-motion test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-manim-lab.yml'
+      - 'videos/manim-wawasan/**'
+      - 'scripts/prepare-manim-overlay.sh'
+
+permissions:
+  contents: read
+
+jobs:
+  manim-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: videos/manim-wawasan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: videos/manim-wawasan/requirements.txt
+      - name: Install Cairo, Pango, FFmpeg and fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y build-essential pkg-config libcairo2-dev libpango1.0-dev ffmpeg fonts-dejavu-core
+      - name: Install pinned Manim Community
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements.txt
+          python -m manim --version
+      - name: Render abstract 9:16 route
+        run: |
+          python -m manim render -ql --renderer=cairo --format=mp4 \
+            --resolution=360,640 --fps=30 --media_dir=out \
+            route_motion.py WawasanRoute
+      - name: Validate actual encoded video
+        run: |
+          python - <<'PY'
+          import json,pathlib,subprocess
+          clips=list(pathlib.Path('out').rglob('WawasanRoute.mp4'))
+          assert len(clips)==1,clips
+          p=clips[0]
+          assert p.stat().st_size>100000, 'Empty Manim MP4'
+          v=json.loads(subprocess.check_output([
+            'ffprobe','-v','error','-show_entries','format=duration:stream=width,height',
+            '-of','json',str(p)]))
+          stream=next(s for s in v['streams'] if 'width' in s)
+          assert (stream['width'],stream['height'])==(360,640),stream
+          assert float(v['format']['duration'])>3.0,v
+          print('Validated Manim clip:',p)
+          PY
+      - name: Prepare optional Remotion-importable MP4
+        run: |
+          path="$(find out -type f -name WawasanRoute.mp4 -print -quit)"
+          test -n "$path"
+          mkdir -p export
+          cp "$path" export/wawasan-manim-route.mp4
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wawasan-manim-route-lab
+          path: videos/manim-wawasan/export/wawasan-manim-route.mp4
+          retention-days: 7
+          if-no-files-found: warn
