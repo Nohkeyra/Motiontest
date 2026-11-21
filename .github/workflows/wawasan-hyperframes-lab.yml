@@ -9,7 +9,7 @@ on:
       - 'videos/hyperframes-wawasan/**'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   hyperframes-smoke:
@@ -23,12 +23,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: videos/hyperframes-wawasan/package-lock.json
       - name: Install FFmpeg
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
       - name: Install pinned HyperFrames and GSAP
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Confirm HyperFrames installation
         run: |
           node -v
@@ -53,22 +55,6 @@ jobs:
           assert streams and (streams[0]['width'],streams[0]['height'])==(1080,1920)
           assert 3.7<float(v['format']['duration'])<4.4
           PY
-      - name: Commit resolved npm lockfile for reproducibility
-        if: success()
-        run: |
-          if git -C "$GITHUB_WORKSPACE" ls-files --error-unmatch videos/hyperframes-wawasan/package-lock.json >/dev/null 2>&1; then
-            echo "Lockfile already tracked."
-          else
-            git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
-            git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git -C "$GITHUB_WORKSPACE" add videos/hyperframes-wawasan/package-lock.json
-            git -C "$GITHUB_WORKSPACE" commit -m "build(hyperframes): lock verified HTML-renderer dependencies"
-            # Other motion tool jobs can push while this render runs.
-            # Rebase our new lockfile commit onto latest main before publishing.
-            git -C "$GITHUB_WORKSPACE" fetch origin main
-            git -C "$GITHUB_WORKSPACE" rebase origin/main
-            git -C "$GITHUB_WORKSPACE" push origin HEAD:main
-          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -19,3 +19,11 @@ The main application is Nohkeyra/Pu. Do not change it for video production.
 - Manim (`videos/manim-wawasan`) is an optional Python procedural graphics generator. A Manim route sketch is not a verified rider route. Real map positions must come from actual app data.
 - Reference clips guide pacing and choreography only. Preserve actual Wawasan brand assets, established labels, and correct screen states.
 - Do not add any chosen music to the repository until the user selects it and its usage rights are confirmed.
+
+## Reference-inspired film motion grammar
+
+- Reference video 147494.mp4: editorial poster collage, torn-paper-like masks, layered cutouts, dramatic hierarchy and cropped oversized typography. Adapt the compositional ideas; do not reproduce third-party imagery, poster designs, or red/black palette.
+- Reference video 147495.mp4: fast 3D phone choreography, floating category cards, UI-to-object transitions, clean spatial blocking and contrasting graphic backgrounds. Build with authentic Wawasan UI and real dish assets, not simulated banking widgets.
+- Keep cuts confidently paced around the user-selected beat (110–120 BPM preferred). Do not assume a track has been chosen.
+- For maps, use actual route coordinates/recordings and never pretend abstract Manim sketches are live rider tracking.
+- The two references are creative guidance only; do not commit or redistribute the original third-party videos.
