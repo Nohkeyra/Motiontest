@@ -1,0 +1,91 @@
+name: Wawasan Remotion Paths Shapes Lottie integration check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-remotion-addons.yml'
+      - 'videos/wawasan-authentic/src/MotionAddonsSmoke.tsx'
+      - 'videos/wawasan-authentic/package.json'
+      - 'videos/wawasan-authentic/package-lock.json'
+
+# Temporarily allows committing the tested package lock. Restore read-only
+# after the lockfile exists and the compositional render passes.
+permissions:
+  contents: write
+
+jobs:
+  verify-addons:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve exact additional Remotion dependencies
+        run: |
+          npm install --package-lock-only --no-audit --no-fund
+          npm ci --no-audit --no-fund
+          npm ls remotion @remotion/cli @remotion/three @remotion/paths \
+            @remotion/shapes @remotion/lottie lottie-web
+      - name: Install render browser and FFprobe
+        run: |
+          npx remotion browser ensure
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Render real shape/path/Lottie proof frames and MP4
+        run: |
+          mkdir -p out
+          npx remotion still src/index.ts WawasanMotionAddonsSmoke out/addons-early.png --frame=20
+          npx remotion still src/index.ts WawasanMotionAddonsSmoke out/addons-late.png --frame=92
+          npm run render:addons
+      - name: Verify stills, full video decode, dimensions and progression
+        run: |
+          python3 - <<'PY'
+          import pathlib,struct,json,subprocess,hashlib
+          a,b=[pathlib.Path('out/'+p) for p in ('addons-early.png','addons-late.png')]
+          for p in (a,b):
+              raw=p.read_bytes()
+              assert raw[:8]==b'\x89PNG\r\n\x1a\n'
+              assert struct.unpack('>II',raw[16:24])==(1080,1920)
+              assert len(raw)>18000,p
+          assert hashlib.sha256(a.read_bytes()).digest()!=hashlib.sha256(b.read_bytes()).digest()
+          p=pathlib.Path('out/wawasan-addons-smoke.mp4')
+          assert p.stat().st_size>50000
+          result=json.loads(subprocess.check_output(['ffprobe','-v','error',
+            '-show_entries','format=duration:stream=width,height,r_frame_rate',
+            '-of','json',str(p)]))
+          stream=next(s for s in result['streams'] if 'width' in s)
+          assert (stream['width'],stream['height'])==(1080,1920)
+          assert 3.8<=float(result['format']['duration'])<=4.2
+          subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],check=True)
+          print('Passed: pinned dependencies + SVG path + shapes + Lottie + MP4.')
+          PY
+      - name: Publish tested package-lock file
+        run: |
+          git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
+          git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$GITHUB_WORKSPACE" add videos/wawasan-authentic/package-lock.json
+          if git -C "$GITHUB_WORKSPACE" diff --cached --quiet; then
+            echo "Pinned dependency lockfile already synchronized."
+            exit 0
+          fi
+          git -C "$GITHUB_WORKSPACE" commit -m "build(remotion): lock validated paths shapes and lottie packages"
+          git -C "$GITHUB_WORKSPACE" fetch origin main
+          git -C "$GITHUB_WORKSPACE" rebase origin/main
+          git -C "$GITHUB_WORKSPACE" push origin HEAD:main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wawasan-remotion-addons-proof
+          path: |
+            videos/wawasan-authentic/out/addons-early.png
+            videos/wawasan-authentic/out/addons-late.png
+            videos/wawasan-authentic/out/wawasan-addons-smoke.mp4
+          retention-days: 7
+          if-no-files-found: warn
