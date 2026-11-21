@@ -1,6 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {BEAT_FRAMES, BEAT_OFFSET, CUTS} from './musicGrid';
+import {FractalRidges, GaussianBlurTrail, PolarCoordinates, SpectralMap, WaveWarp} from './effects/FilmEffects';
 
 // WAWASAN / THE RHYTHM OF FLAVOUR
 // Film graphics are editorial; EVERY app screen, tap clip, dish, sign and batik
@@ -105,6 +106,7 @@ const Glint:React.FC<{f:number;at:number;light?:boolean}>=({f,at,light=false})=>
 const Opening:React.FC<{duration:number}>=({duration})=>{
   const f=useCurrentFrame(),enter=s(f,0,29),phone=s(f,30,61),exit=out(f,duration);
   return <Stage batik={.075}>
+    <FractalRidges color={P.orange} opacity={.105} y={310} height={1270} lines={8} amplitude={125}/>
     <Rule/>
     <Mini>RESTORAN WAWASAN · A DIFFERENT KIND OF APP FILM</Mini>
     <Kinetic f={f} delay={6} top={190} size={135}>GOOD FOOD.
@@ -130,6 +132,7 @@ const Opening:React.FC<{duration:number}>=({duration})=>{
 const Heritage:React.FC<{duration:number}>=({duration})=>{
   const f=useCurrentFrame(),enter=s(f,0,34),exit=out(f,duration);
   return <Stage light batik={.16}>
+    <PolarCoordinates color={P.clay} opacity={.12} cx={540} cy={1040} rings={10} radius={620}/>
     <Rule light/>
     <Mini light>CRAFTED WITH CHARACTER</Mini>
     <div style={{position:'absolute',left:-180,top:490,width:680,height:680,
@@ -151,6 +154,7 @@ const Theme:React.FC<{duration:number}>=({duration})=>{
   const f=useCurrentFrame(),enter=s(f,-6,17),transition=s(f,38,79);
   const pulse=beat(f)*.014;
   return <Stage batik={.08}>
+    <GaussianBlurTrail color={P.orange} opacity={.14} blur={48} x={55} y={710} width={930} height={850}/>
     <Rule/><Mini>THE REAL WAWASAN WELCOME</Mini>
     <Kinetic f={f} delay={0} size={110} top={157}>LIGHT.
       {'\n'}DARK.
@@ -226,6 +230,12 @@ const Menu:React.FC<{duration:number}>=({duration})=>{
   const phases=[s(f,12,34),s(f,56,78),s(f,107,129),s(f,160,179)];
   const items=['kari_kambing','mee_soto','kuih_muih_campur','laksa_johor'];
   return <Stage light batik={.11}>
+    <WaveWarp opacity={.13} strength={12} frequency={.007}>
+      <div style={{position:'absolute',left:-200,top:510,width:1520,height:520,
+        transform:'rotate(-22deg)',borderRadius:'46%',
+        background:'repeating-linear-gradient(90deg,transparent 0,transparent 80px,'+
+          'rgba(167,81,48,.7) 87px,rgba(167,81,48,.7) 91px,transparent 99px)'}}/>
+    </WaveWarp>
     <Mini light>THE MENU COMES ALIVE</Mini><Rule y={140} light/>
     <Kinetic f={f} top={180} size={136} light>CHOOSE.
       {'\n'}ENJOY.</Kinetic>
@@ -256,6 +266,7 @@ const Menu:React.FC<{duration:number}>=({duration})=>{
 const Finale:React.FC<{duration:number}>=({duration})=>{
   const f=useCurrentFrame(),enter=s(f,0,31),text=s(f,27,50),line=s(f,54,80);
   return <Stage batik={.19}>
+    <SpectralMap opacity={.16} x={-130} y={380} width={1420} height={820} blur={28} travel={430}/>
     <Rule/><Mini>RESTORAN WAWASAN / PAK USOP</Mini>
     <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 41%,rgba(255,161,39,.18),transparent 59%)'}}/>
     <Img src={staticFile('frames/brand-sign.webp')} style={{
