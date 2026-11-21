@@ -35,3 +35,11 @@ The main application is Nohkeyra/Pu. Do not change it for video production.
 - Synthetic WAVs are deterministic and generated on GitHub Actions; no third-party samples, music or recordings need to be checked into the source repo.
 - Sync SFX to real taps, route animation, invoice changes and typography beats. Never claim the demo's example cue frames match actual user interactions.
 - The existing MasterCut soundtrack and the app's own notification audio are explicitly out of scope until separately approved. Use music ducking only after reviewing the chosen track and final cue positions.
+
+## Render-loop production discipline
+
+- The frame-based, seek-safe seamless loop reference is `videos/wawasan-authentic/src/loop/`. `WawasanSeamlessLoop` is an isolated 4-second proof composition, not an official Wawasan UI, logo or rider-map state.
+- Use `loopPhase()` and integer cycle counts for animated properties that must close at the boundary. No wall-clock clocks, `requestAnimationFrame`, `Math.random()` during rendering, mutable frame-to-frame simulation, or indefinite animation clocks.
+- CI `.github/workflows/wawasan-render-loop-qa.yml` runs the loop and validates the encoded MP4, dimensions, frame count, FPS, full decode, nonblank samples, motion variation and the visible first/last seam.
+- For future renders, `python3 scripts/render-with-qa.py --composition WawasanSeamlessLoop --output out/wawasan-seamless-loop.mp4 --frames 120 --seam --expected-audio none` performs a maximum of **two** attempts and exports QA logs.
+- This workflow is only an isolated production check. Do not automatically change `MasterCut`, selected music, or the main Android app; seamless assets must be reviewed before being incorporated into final edits.
