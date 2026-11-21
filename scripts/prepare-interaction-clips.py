@@ -13,6 +13,13 @@ clips.mkdir(exist_ok=True)
 duration=float(subprocess.check_output(['ffprobe','-v','error','-show_entries',
     'format=duration','-of','default=nw=1:nk=1',str(video)]).strip())
 if duration<12: raise SystemExit('Real app recording unexpectedly short')
+probe=json.loads(subprocess.check_output([
+    'ffprobe','-v','error','-select_streams','v:0',
+    '-show_entries','stream=width,height','-of','json',str(video)]))
+v=probe['streams'][0]
+if (int(v['width']),int(v['height'])) != (432,900):
+    raise SystemExit('Incorrect Wawasan capture framing: video must exactly match mobile viewport')
+
 index=[]
 for item in data['examples']:
     start=max(0.0,float(data['markers'][item['marker']])-0.35)

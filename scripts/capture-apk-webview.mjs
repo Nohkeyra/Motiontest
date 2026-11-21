@@ -10,7 +10,7 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const context=await browser.newContext({
   viewport:{width:432,height:900},deviceScaleFactor:2.5,isMobile:true,
   hasTouch:true,colorScheme:'light',locale:'en-MY',
-  recordVideo:{dir:path.join(out,'recordings'),size:{width:864,height:1800}}
+  recordVideo:{dir:path.join(out,'recordings'),size:{width:432,height:900}}
 });
 await context.addInitScript(()=>{
   // Supported Capacitor runtime hook. The earlier cap.getPlatform override
