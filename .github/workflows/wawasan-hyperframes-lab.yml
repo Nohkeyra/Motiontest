@@ -9,7 +9,7 @@ on:
       - 'videos/hyperframes-wawasan/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   hyperframes-smoke:
@@ -53,6 +53,18 @@ jobs:
           assert streams and (streams[0]['width'],streams[0]['height'])==(1080,1920)
           assert 3.7<float(v['format']['duration'])<4.4
           PY
+      - name: Commit resolved npm lockfile for reproducibility
+        if: success()
+        run: |
+          if git -C "$GITHUB_WORKSPACE" ls-files --error-unmatch videos/hyperframes-wawasan/package-lock.json >/dev/null 2>&1; then
+            echo "Lockfile already tracked."
+          else
+            git -C "$GITHUB_WORKSPACE" config user.name "github-actions[bot]"
+            git -C "$GITHUB_WORKSPACE" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C "$GITHUB_WORKSPACE" add videos/hyperframes-wawasan/package-lock.json
+            git -C "$GITHUB_WORKSPACE" commit -m "build(hyperframes): lock verified HTML-renderer dependencies"
+            git -C "$GITHUB_WORKSPACE" push origin HEAD:main
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
