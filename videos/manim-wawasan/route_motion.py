@@ -20,16 +20,16 @@ class WawasanRoute(Scene):
         boundary.shift(DOWN*.05)
         self.add(boundary)
         segment_a=CubicBezier(
-            start=np.array([-2.65,-3.75,0]),
-            control1=np.array([-1.35,-2.45,0]),
-            control2=np.array([-2.25,-.95,0]),
-            end=np.array([-.25,-.15,0]),
+            np.array([-2.65,-3.75,0]),
+            np.array([-1.35,-2.45,0]),
+            np.array([-2.25,-.95,0]),
+            np.array([-.25,-.15,0]),
             color=amber,stroke_width=14)
         segment_b=CubicBezier(
-            start=segment_a.get_end(),
-            control1=np.array([1.65,.68,0]),
-            control2=np.array([1.78,2.35,0]),
-            end=np.array([2.65,3.45,0]),
+            segment_a.get_end(),
+            np.array([1.65,.68,0]),
+            np.array([1.78,2.35,0]),
+            np.array([2.65,3.45,0]),
             color=amber,stroke_width=14)
         route=VMobject().set_stroke(amber,width=14)
         route.set_points(np.concatenate([segment_a.get_points(),segment_b.get_points()]))
