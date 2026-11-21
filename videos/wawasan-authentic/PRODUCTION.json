@@ -1,0 +1,80 @@
+{
+  "name": "WAWASAN / EDITORIAL MOTION",
+  "stage": "first full film draft, creative approval pending",
+  "format": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "duration_seconds": 30
+  },
+  "source": {
+    "type": "signed APK compiled WebView capture",
+    "release": "v1.3.225",
+    "provenance": "public APK release: Nohkeyra/Pu",
+    "capture": [
+      "welcome",
+      "welcome-light",
+      "after-start",
+      "order-start",
+      "order-selected",
+      "order-menu",
+      "order-dishes"
+    ],
+    "disclaimer": "Browser capture of APK packaged UI. It is not Android hardware footage."
+  },
+  "visual": {
+    "colors": [
+      "#291A17",
+      "#F8EAD1",
+      "#F6A829"
+    ],
+    "direction": "precision editorial choreography, authentic UI and typography, restrained transitions",
+    "do_not_fabricate": true
+  },
+  "shots": [
+    {
+      "start": 0,
+      "end": 111,
+      "subject": "Original dark welcome",
+      "motion": "macro-to-poster"
+    },
+    {
+      "start": 111,
+      "end": 239,
+      "subject": "Actual light/dark theme states",
+      "motion": "moving theme split"
+    },
+    {
+      "start": 239,
+      "end": 360,
+      "subject": "Real login entry screen",
+      "motion": "perspective glide"
+    },
+    {
+      "start": 360,
+      "end": 514,
+      "subject": "Real guest order event step",
+      "motion": "editorial stage shift"
+    },
+    {
+      "start": 514,
+      "end": 633,
+      "subject": "Actually selected Office Feast, Lunch, Buffet",
+      "motion": "selection-state matte"
+    },
+    {
+      "start": 633,
+      "end": 781,
+      "subject": "Actual order menu and dish list",
+      "motion": "menu reveal"
+    },
+    {
+      "start": 781,
+      "end": 900,
+      "subject": "Original sign asset and campaign announcement",
+      "motion": "restrained hero landing"
+    }
+  ],
+  "audio": "original procedural instrumental cue design, not a licensed song; listening review pending",
+  "verification": "GitHub Actions render + full decode + MP4 metadata + review frames; creative QA separately required"
+}

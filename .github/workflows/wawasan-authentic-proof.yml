@@ -1,4 +1,4 @@
-name: Wawasan signed APK bundle to motion proof
+name: Wawasan signed APK to 30s studio film
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +15,7 @@ on:
       - 'scripts/capture-apk-webview.mjs'
       - 'scripts/verify.py'
       - 'videos/wawasan-authentic/**'
+      - 'scripts/generate-film-score.mjs'
 permissions:
   contents: read
 jobs:
@@ -81,22 +82,24 @@ jobs:
           VERSION="$(npm view remotion version)"
           npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
       - run: npx remotion browser ensure
-      - name: Render original 9-second style proof
-        run: npm run render:proof
+      - name: Build original instrumental sound design
+        run: node ../../scripts/generate-film-score.mjs
+      - name: Render 30-second Wawasan studio film
+        run: npm run render:film
       - name: Install FFmpeg for independent video checks
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
           ffprobe -version | head -n 1
       - name: Verify MP4 and extract review frames
-        run: python3 ../../scripts/verify.py video out/authentic-proof.mp4
+        run: python3 ../../scripts/verify.py video out/wawasan-studio-film.mp4
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: wawasan-original-motion-proof
+          name: wawasan-30s-studio-film
           retention-days: 14
           if-no-files-found: error
           path: |
-            videos/wawasan-authentic/out/authentic-proof.mp4
+            videos/wawasan-authentic/out/wawasan-studio-film.mp4
             videos/wawasan-authentic/out/review-frames/*.png
             videos/wawasan-authentic/public/frames/capture.json

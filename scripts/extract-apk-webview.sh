@@ -26,4 +26,12 @@ import json,pathlib,sys
   'method':'Extracted compiled frontend from signed APK; rendered in mobile Chromium, not an Android emulator'
 },indent=2))
 PY
+# Original sign artwork and Outfit Latin subset are shipped inside this same APK.
+# Assets are used only by the video renderer; the screen pixels are not redrawn.
+for item in "assets/illustrations/wawasan-native-sign-cutout.webp:brand-sign.webp" "assets/fonts/wawasan-ui-1.woff2:outfit-latin.woff2"; do
+  source="${item%%:*}"
+  dest="${item#*:}"
+  test -s "$root/apk-site/site/$source" || { echo "::error::Signed APK missing expected original asset $source"; exit 1; }
+  cp "$root/apk-site/site/$source" "$root/capture/$dest"
+done
 echo "APK web bundle extracted, SHA256: $hash"

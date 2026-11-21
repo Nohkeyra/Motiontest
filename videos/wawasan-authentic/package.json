@@ -1,8 +1,9 @@
 {
   "name": "wawasan-authentic-film",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
+    "render:film": "remotion render src/index.ts WawasanFilm out/wawasan-studio-film.mp4 --codec=h264 --crf=18 --concurrency=2",
     "render:proof": "remotion render src/index.ts AuthenticProof out/authentic-proof.mp4 --codec=h264 --crf=20 --concurrency=2"
   }
 }
