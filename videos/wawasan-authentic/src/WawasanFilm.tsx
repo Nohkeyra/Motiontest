@@ -153,7 +153,7 @@ const Select:React.FC<{f:number}>=({f})=>{
   return <AbsoluteFill>
     <Back/>
     <Label opacity={1}>REAL SELECTION / NO RECREATED UI</Label>
-    <Big top={180} size={87} opacity={.9}>MAKE IT
+    <Big top={132} size={77} opacity={.9}>MAKE IT
       {'\n'}YOURS.</Big>
     <Device scale={.89+pulse} y={80}>
       <ScreenImage name="order-start"/>
@@ -176,18 +176,17 @@ const Menu:React.FC<{f:number}>=({f})=>{
     <Big dark top={155} size={86} opacity={enter}>ON THE
       {'\n'}MENU.</Big>
     <Device x={450*(1-enter)} y={y} angle={6*(1-enter)} scale={scale}>
-      <ScreenImage name="order-menu"/>
-      <ScreenImage name="order-dishes" clip={'inset('+(100*(1-cards))+'% 0 0 0)'}/>
+      <ScreenImage name="order-dishes"/>
     </Device>
     <Footer dark opacity={enter}>06 / ACTUAL MENU CARDS IN THE APK</Footer>
   </AbsoluteFill>;
 };
 const Close:React.FC<{f:number}>=({f})=>{
   const local=f-781;
-  const inMotion=ease(local,0,34);
-  const mark=ease(local,17,50);
-  const announce=ease(local,36,61);
-  const accentWidth=interpolate(local,[39,73],[0,650],clamp);
+  const inMotion=ease(local,0,24);
+  const mark=ease(local,0,15);
+  const announce=ease(local,18,44);
+  const accentWidth=interpolate(local,[22,55],[0,650],clamp);
   return <AbsoluteFill>
     <Back/>
     <AbsoluteFill style={{background:'radial-gradient(ellipse at 50% 39%,rgba(232,123,29,.24),transparent 56%)',opacity:mark}}/>
