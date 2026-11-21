@@ -187,12 +187,7 @@ const Enter:React.FC<{duration:number}>=({duration})=>{
     <Device x={320-320*enter-140*go} y={180*(1-enter)+80*go}
       roll={-12+8*enter+2*go} tilt={11-11*enter}
       scale={.68+.16*enter+pulse} opacity={enter}>
-      <Sequence from={0} durationInFrames={Math.min(duration,70)} layout="none">
-        <Clip name="started"/>
-      </Sequence>
-      <Sequence from={70} durationInFrames={Math.max(1,duration-70)} layout="none">
-        <Clip name="draft"/>
-      </Sequence>
+      {f<65 ? <Clip name="started"/> : <Still name="order-start"/>}
     </Device>
     <div style={{position:'absolute',left:70,top:1525,width:900,height:115,
       backgroundColor:P.orange,opacity:go,
@@ -210,12 +205,7 @@ const Choices:React.FC<{duration:number}>=({duration})=>{
     <Mini>YOUR EVENT. YOUR WAY.</Mini><Rule y={140}/>
     <Device x={440-455*enter} y={170-90*enter}
       tilt={18-16*enter} roll={7-6*enter} scale={.72+.16*enter} opacity={enter}>
-      <Sequence from={0} durationInFrames={Math.min(duration,120)} layout="none">
-        <Clip name="selection"/>
-      </Sequence>
-      <Sequence from={120} durationInFrames={Math.max(1,duration-120)} layout="none">
-        <Still name="order-selected"/>
-      </Sequence>
+      {f<54 ? <Clip name="selection"/> : <Still name="order-selected"/>}
     </Device>
     <div style={{position:'absolute',top:290,left:790,opacity:enter,
       transform:'translateX('+((1-enter)*290)+'px)'}}>
@@ -241,12 +231,7 @@ const Menu:React.FC<{duration:number}>=({duration})=>{
       {'\n'}ENJOY.</Kinetic>
     <Device x={-360+105*enter} y={214} scale={.58+.06*enter} roll={-8+4*enter}
       tilt={12-7*enter} opacity={enter*exit}>
-      <Sequence from={0} durationInFrames={Math.min(duration,100)} layout="none">
-        <Clip name="menu"/>
-      </Sequence>
-      <Sequence from={100} durationInFrames={Math.max(1,duration-100)} layout="none">
-        <Still name="order-dishes"/>
-      </Sequence>
+      <Still name="order-dishes"/>
     </Device>
     {items.map((name,i)=>{
       const p=phases[i],next=phases[i+1]??0;
