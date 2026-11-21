@@ -31,7 +31,7 @@ jobs:
       - name: Install reproducible dependency tree
         run: |
           npm ci --no-audit --no-fund
-          npm ls remotion @remotion/cli @remotion/three three @react-three/fiber react react-dom
+          npm ls remotion @remotion/cli @remotion/three @remotion/paths @remotion/shapes @remotion/lottie lottie-web three @react-three/fiber react react-dom
       - name: Provision Remotion browser
         run: npx remotion browser ensure
       - name: Render 3D + kinetic typography at two different frames

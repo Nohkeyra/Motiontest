@@ -27,8 +27,10 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: videos/wawasan-authentic/package-lock.json
-      - name: Install locked renderer
-        run: npm ci --no-audit --no-fund
+      - name: Install locked renderer including new Remotion add-ons
+        run: |
+          npm ci --no-audit --no-fund
+          npm ls @remotion/paths @remotion/shapes @remotion/lottie lottie-web
       - name: Install renderer browser
         run: npx remotion browser ensure
       - name: Render one preview frame per effect
