@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   render:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - name: Checkout Motiontest production engine
@@ -70,7 +70,7 @@ jobs:
         working-directory: videos/wawasan-film
         run: |
           set -euo pipefail
-          VERSION="$(npm view remotion version)"
+          VERSION="4.0.545"
           npm install --no-fund --no-audit --no-save "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19 playwright@1.65.0
           npx playwright install chromium
           npx remotion browser ensure
@@ -88,6 +88,30 @@ jobs:
           for n in phone-home phone-order wide-home wide-order; do
             test -s "public/assets/$n.png"
           done
+      - name: Capture authentic APK taps and build frame-accurate UI sequences
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          mkdir -p capture
+          echo '{"source":"signed Wawasan APK web assets"}' > capture/origin.json
+          cp scripts/capture-apk-webview.mjs videos/wawasan-film/scripts/capture-real.mjs
+          node videos/wawasan-film/scripts/capture-real.mjs
+          python3 scripts/prepare-interaction-clips.py capture
+          D=videos/wawasan-film/public/assets
+          mkdir -p "$D/sequences/started" "$D/sequences/selection" "$D/sequences/desktop"
+          cp capture/sequences/started/*.jpg "$D/sequences/started/"
+          cp capture/sequences/selection/*.jpg "$D/sequences/selection/"
+          cp capture/welcome.png "$D/phone-home.png"
+          cp capture/order-selected.png "$D/phone-order.png"
+          OFFSET="$(node -p "require('./videos/wawasan-film/public/assets/desktop-action.json').first")"
+          ffmpeg -hide_banner -loglevel error -y -ss "$OFFSET" -i "$D/desktop-interaction.webm" -vf "fps=30,scale=1440:900,tpad=stop_mode=clone:stop_duration=3" -frames:v 96 "$D/sequences/desktop/%04d.jpg"
+          for n in started selection desktop; do
+            test "$(find "$D/sequences/$n" -maxdepth 1 -name '*.jpg' | wc -l)" -ge 96 || { echo "Not enough real $n frames"; exit 1; }
+          done
+          python3 scripts/generate-wawasan-sfx.py --output videos/wawasan-film/public/audio/sfx
+          python3 scripts/verify-wawasan-sfx.py --input videos/wawasan-film/public/audio/sfx
       - name: Render two 30-second motion compositions in Motiontest
         shell: bash
         working-directory: videos/wawasan-film
@@ -108,12 +132,14 @@ jobs:
             duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f")"
             echo "$f frames=$frames duration=$duration"
             [[ "$frames" == 900 ]] || exit 7
+            ffmpeg -hide_banner -loglevel error -i "$f" -f null -
             ffmpeg -hide_banner -loglevel error -i "$f" -vf "select='eq(n,60)+eq(n,205)+eq(n,350)+eq(n,500)+eq(n,695)+eq(n,835)',scale=480:-1,tile=3x2" -frames:v 1 "out/Wawasan_"$mode"_ContactSheet.jpg" -y
             test -s "out/Wawasan_"$mode"_ContactSheet.jpg"
           done
       - name: Copy source audit
         run: cp source-proof.txt videos/wawasan-film/out/source-proof.txt
       - name: Upload both finished films and inspection frames
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Wawasan-Motiontest-Two-Films

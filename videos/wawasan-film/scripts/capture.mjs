@@ -15,7 +15,7 @@ for(const cfg of [
  {name:'wide-order',wide:true,hash:'#/order'}
 ]){
  const context=await browser.newContext({viewport:cfg.wide?{width:1440,height:900}:{width:390,height:844},deviceScaleFactor:2,
- isMobile:!cfg.wide,hasTouch:!cfg.wide,reducedMotion:'reduce',serviceWorkers:'block'});
+ isMobile:!cfg.wide,hasTouch:!cfg.wide,reducedMotion:'reduce',serviceWorkers:'block',recordVideo:cfg.name==='wide-order'?{dir:out,size:{width:1440,height:900}}:undefined});
  await context.addInitScript(()=>{
   try{
     localStorage.setItem('wawasan_language','bm');
@@ -27,6 +27,7 @@ for(const cfg of [
   }catch(_){}
  });
  const page=await context.newPage();
+ const captureStarted=Date.now();
  page.on('pageerror',e=>errors.push(cfg.name+': '+String(e).slice(0,200)));
  await page.route('**/*',async route=>{
    const u=new URL(route.request().url());
@@ -55,7 +56,31 @@ for(const cfg of [
  const size=fs.statSync(p).size;
  if(size<22000) throw new Error('Screenshot unexpectedly small: '+cfg.name+' '+size+' bytes');
  console.log('CAPTURE_OK '+cfg.name+' '+size+' bytes; title '+(await page.title())+'; app text '+text.slice(0,90).replace(/\n/g,' / '));
- await context.close();
+ if(cfg.name==='wide-order'){
+   const selectors=["[data-tour='step1-event-type'] [role='radio']","[data-tour='step1-meal-tengahari']","[data-tour='step1-prep-buffet']"];
+   const recorded=[];
+   const draft=page.getByRole('button',{name:'Prepare a Draft',exact:true}).first();
+   if(await draft.count() && await draft.isVisible()){
+      const t=(Date.now()-captureStarted)/1000;
+      await draft.click({timeout:6000});recorded.push({t,action:'Prepare a Draft'});
+      await page.waitForTimeout(2500);
+   }
+   for(const selector of selectors){
+     const el=page.locator(selector).first();
+     if(await el.count() && await el.isVisible()){
+       const t=(Date.now()-captureStarted)/1000;
+       await el.click({timeout:5000}); recorded.push({t,action:selector});
+       await page.waitForTimeout(700);
+     }
+   }
+   if(recorded.length<1) throw Error('No real desktop app click succeeded; refuse fabricated interaction');
+   await page.waitForTimeout(2000);
+   const video=page.video();
+   await context.close();
+   fs.copyFileSync(await video.path(),path.join(out,'desktop-interaction.webm'));
+   fs.writeFileSync(path.join(out,'desktop-action.json'),JSON.stringify({recorded,first:recorded[0].t},null,2));
+   console.log('REAL_DESKTOP_CLICKS',JSON.stringify(recorded));
+ }else await context.close();
 }
 console.log('CAPTURE_COMPLETE: four genuine Wawasan browser UI screenshots; '+errors.length+' page errors');
 if(errors.length)console.log('NON_FATAL_PAGE_ERRORS',JSON.stringify(errors.slice(0,8)));

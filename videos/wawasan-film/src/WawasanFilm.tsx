@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill,Img,staticFile,useCurrentFrame,useVideoConfig,spring} from 'remotion';
+import {AbsoluteFill,Img,Audio,Sequence,staticFile,useCurrentFrame,useVideoConfig,spring} from 'remotion';
 
 const B='#291A17',K='#F8EAD1',A='#F5A623',O='#ED592C';
 const clip=(x:number)=>Math.max(0,Math.min(1,x));
@@ -20,7 +20,7 @@ function Punch({f,at,x,y,size,word,color=K}:{f:number,at:number,x:number,y:numbe
 const p=spring({frame:f-at,fps:30,config:{damping:15,stiffness:138}});
 return <div style={{position:'absolute',left:x,top:y,...strong,fontSize:size,color,whiteSpace:'pre-line',textShadow:shadow,opacity:clip(p),transform:'translateY('+((1-p)*95)+'px) scale('+(0.77+0.23*p)+')',transformOrigin:'left top'}}>{word}</div>;
 }
-function Device({wide,f,at,src,small=false}:{wide:boolean,f:number,at:number,src:string,small?:boolean}){
+function Device({wide,f,at,src,small=false,sequence,sequenceAt,sequenceLength=0}:{wide:boolean,f:number,at:number,src:string,small?:boolean,sequence?:string,sequenceAt?:number,sequenceLength?:number}){
 const p=spring({frame:f-at,fps:30,config:{damping:22,stiffness:92}});
 const width=wide?(small?970:1200):(small?590:745);
 const height=wide?(small?645:780):(small?1260:1600);
@@ -34,6 +34,7 @@ transform:'translateX('+((1-p)*950)+'px) translateY('+((1-p)*120)+'px) rotate('+
 {[O,A,'#75846D'].map((c,i)=><i key={i} style={{width:12,height:12,borderRadius:'50%',background:c}}/>)}
 <div style={{width:580,marginLeft:80,height:25,lineHeight:'25px',textAlign:'center',background:'#1A1411',color:'#E5D0B4',borderRadius:10,fontSize:15,fontFamily:'Arial'}}>restoran-wawasan.app</div></div>}
 <Img src={file(src)} style={{width:'100%',height:wide?'calc(100% - 42px)':'100%',objectFit:'cover',objectPosition:'top center'}}/>
+{sequence&&sequenceAt!==undefined&&f>=sequenceAt&&f<sequenceAt+sequenceLength&&<Img src={file('sequences/'+sequence+'/'+String(Math.min(sequenceLength-1,Math.floor(f-sequenceAt))).padStart(4,'0')+'.jpg')} style={{position:'absolute',left:0,top:wide?42:0,width:'100%',height:wide?'calc(100% - 42px)':'100%',objectFit:'fill'}}/>}
 </div>
 {!wide&&<div style={{position:'absolute',top:5,left:'36%',width:'28%',height:26,borderRadius:40,background:'#0B0808'}}/>}
 </div>;
@@ -68,7 +69,7 @@ return <div style={{position:'absolute',left,top,width:930,height:620,borderRadi
 <path d="M95 475 C210 410 275 145 480 240 S695 100 845 105" fill="none" stroke="#100B0A" strokeWidth="42" opacity=".55"/>
 <path d="M95 475 C210 410 275 145 480 240 S695 100 845 105" fill="none" stroke={A} strokeWidth="12" strokeLinecap="round" pathLength="1000" strokeDasharray="1000" strokeDashoffset={1000*(1-progress)}/>
 <circle cx="95" cy="475" r="26" fill={O} stroke={K} strokeWidth="7"/><circle cx="845" cy="105" r="26" fill={A} stroke={K} strokeWidth="7"/>
-</svg><div style={{position:'absolute',left:40,bottom:42,color:K,letterSpacing:4,fontSize:25,fontWeight:900}}>LIVE RIDER / ROUTE</div>
+</svg><div style={{position:'absolute',left:40,bottom:42,color:K,letterSpacing:4,fontSize:25,fontWeight:900}}>ROUTE / CONCEPTUAL VISUAL</div>
 <div style={{position:'absolute',right:55,top:35,color:A,fontSize:28,fontWeight:900}}>{Math.round(progress*100)}%</div>
 </div>;
 }
@@ -92,7 +93,7 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 </div>
 <div style={{position:'absolute',inset:0,opacity:b}}>
 <Head f={f} at={112} wide={wide} kicker="01 / EXPLORE" title={wide?'RASA.\nDALAM\nSATU TAP.':'PILIH.\nRASA.\nULANG.'} desc="Menu sebenar Wawasan. Tiada rekaan UI tiruan."/>
-<Device wide={wide} f={f} at={116} src={wide?'wide-home.png':'phone-home.png'}/>
+<Device wide={wide} f={f} at={116} src={wide?'wide-home.png':'phone-home.png'} sequence={!wide?'started':undefined} sequenceAt={145} sequenceLength={72}/>
 <Food f={f} at={150} src="nasi.webp" x={wide?1170:5} y={wide?550:970} sz={wide?360:420}/>
 <Food f={f} at={172} src="rendang.webp" x={wide?1630:670} y={wide?200:390} sz={wide?295:350}/>
 <Food f={f} at={190} src="soto.webp" x={wide?810:510} y={wide?720:1440} sz={wide?315:340}/>
@@ -101,7 +102,7 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 </div>
 <div style={{position:'absolute',inset:0,opacity:c}}>
 <Head f={f} at={277} wide={wide} kicker="02 / ORDER" title={wide?'BINA JAMUAN\nSENDIRI.':'PILIH.\nSUSUN.\nSIAP.'} desc="Tindakan yang bergerak, bukan slideshow."/>
-<Device wide={wide} f={f} at={296} src={wide?'wide-order.png':'phone-order.png'}/>
+<Device wide={wide} f={f} at={296} src={wide?'wide-order.png':'phone-order.png'} sequence={wide?'desktop':'selection'} sequenceAt={335} sequenceLength={96}/>
 <Tap f={f} at={351} x={wide?1370:790} y={wide?500:980}/>
 <div style={{position:'absolute',left:wide?105:100,top:wide?715:1445,display:'flex',gap:17,opacity:ramp(f,355,380)}}>
 {['MAJLIS','MENU','BUTIRAN'].map((s,i)=><div key={i} style={{fontSize:wide?23:25,fontWeight:900,color:i===1?B:K,border:'2px solid '+A,background:i===1?A:'#2C1E19',padding:wide?'16px 26px':'22px 24px',borderRadius:80,transform:'translateY('+(Math.sin(f/14+i)*6)+'px)'}}>{s}</div>)}</div>
@@ -129,6 +130,7 @@ return <AbsoluteFill style={{overflow:'hidden',background:B,color:K,fontFamily:'
 <div style={{position:'absolute',left:'50%',top:wide?980:1590,width:wide?900:760,height:5,background:A,transform:'translateX(-50%) scaleX('+ramp(f,838,864)+')'}}/>
 </div>
 {[99,267,432,630,773].map(at=><Flash key={at} f={f} at={at} wide={wide}/>)}
+{([[0,'logo_impact',0.28],[102,'whoosh',0.25],[150,'card_expand',0.24],[204,'tap',0.36],[267,'whoosh',0.28],[351,'tap',0.4],[432,'whoosh',0.28],[447,'map_trace',0.28],[630,'paper_swipe',0.25],[774,'logo_impact',0.29],[830,'shimmer',0.22]] as Array<[number,string,number]>).map(([at,name,volume])=><Sequence key={at} from={at}><Audio src={staticFile('audio/sfx/'+name+'.wav')} volume={volume}/></Sequence>)}}
 <div style={{position:'absolute',left:wide?80:70,bottom:wide?40:65,display:'flex',gap:18,alignItems:'center',opacity:.68}}>
 <span style={{fontSize:wide?20:22,fontWeight:900,letterSpacing:3}}>RW / 2027</span>
 <span style={{height:3,width:wide?250:135,background:'#6A5344',position:'relative'}}><span style={{position:'absolute',left:0,top:0,height:'100%',width:(f/9)+'%',background:A}}/></span>
