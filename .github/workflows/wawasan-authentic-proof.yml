@@ -10,11 +10,12 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/wawasan-authentic-proof.yml'
       - 'scripts/extract-apk-webview.sh'
       - 'scripts/capture-apk-webview.mjs'
       - 'scripts/verify.py'
-      - 'videos/wawasan-authentic/**'
+      - 'videos/wawasan-authentic/src/MasterCut.tsx'
+      - 'videos/wawasan-authentic/src/WawasanFilm.tsx'
+      - 'videos/wawasan-authentic/src/AuthenticProof.tsx'
       - 'scripts/generate-film-score.mjs'
       - 'scripts/prepare-master-beat.sh'
       - 'scripts/prepare-interaction-clips.py'
@@ -91,10 +92,13 @@ jobs:
         run: |
           bash ../../scripts/prepare-master-beat.sh
           python3 ../../scripts/music-beat-grid.py .
-      - name: Install matched Remotion versions
+      - name: Install declared, compatible Remotion packages
         run: |
-          VERSION="$(npm view remotion version)"
-          npm install --no-audit --no-fund --save-exact "remotion@$VERSION" "@remotion/cli@$VERSION" react@19 react-dom@19
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
       - run: npx remotion browser ensure
       - name: Render beat-driven 30-second master cut
         run: npm run render:master

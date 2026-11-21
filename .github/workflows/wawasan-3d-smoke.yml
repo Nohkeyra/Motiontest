@@ -1,0 +1,69 @@
+name: Wawasan 3D engine check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wawasan-3d-smoke.yml'
+      - 'videos/wawasan-authentic/package.json'
+      - 'videos/wawasan-authentic/package-lock.json'
+      - 'videos/wawasan-authentic/src/ThreeSmoke.tsx'
+      - 'videos/wawasan-authentic/src/Root.tsx'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-3d:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: videos/wawasan-authentic
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve and install exact versions
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund --package-lock-only
+            npm ci --no-audit --no-fund
+          fi
+          npm ls remotion @remotion/cli @remotion/three three @react-three/fiber react react-dom
+      - name: Provision Remotion browser
+        run: npx remotion browser ensure
+      - name: Render 3D + kinetic typography at two different frames
+        run: |
+          npm run render:3d-smoke
+          npx remotion still src/index.ts Wawasan3DSmoke out/wawasan-3d-smoke-later.png --frame=65 --gl=swangle
+      - name: Validate 3D stills (dimensions, output size, temporal change)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+          images=[Path('out/wawasan-3d-smoke.png'),Path('out/wawasan-3d-smoke-later.png')]
+          for p in images:
+              raw=p.read_bytes()
+              assert raw[:8]==b'\x89PNG\r\n\x1a\n', f'Bad PNG: {p}'
+              w,h=struct.unpack('>II',raw[16:24])
+              assert (w,h)==(1080,1920), f'Wrong dimensions: {p}'
+              assert len(raw)>30000, f'Suspicious blank image: {p}'
+          assert images[0].read_bytes()!=images[1].read_bytes(), '3D frames unchanged'
+          print('Two distinct 1080x1920 rendered 3D frames validated.')
+          PY
+      - name: Export verified frames and generated package lock
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wawasan-threejs-3d-smoke
+          path: |
+            videos/wawasan-authentic/out/wawasan-3d-smoke.png
+            videos/wawasan-authentic/out/wawasan-3d-smoke-later.png
+            videos/wawasan-authentic/package-lock.json
+          retention-days: 7
+          if-no-files-found: warn

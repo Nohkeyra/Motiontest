@@ -1,10 +1,23 @@
 {
   "name": "wawasan-authentic-film",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "scripts": {
     "render:film": "remotion render src/index.ts WawasanFilm out/wawasan-studio-film.mp4 --codec=h264 --crf=18 --concurrency=2",
     "render:proof": "remotion render src/index.ts AuthenticProof out/authentic-proof.mp4 --codec=h264 --crf=20 --concurrency=2",
-    "render:master": "remotion render src/index.ts MasterCut out/wawasan-master-cut.mp4 --codec=h264 --crf=18 --concurrency=2"
+    "render:master": "remotion render src/index.ts MasterCut out/wawasan-master-cut.mp4 --codec=h264 --crf=18 --concurrency=2",
+    "render:3d-smoke": "remotion still src/index.ts Wawasan3DSmoke out/wawasan-3d-smoke.png --frame=28 --gl=swangle"
+  },
+  "dependencies": {
+    "remotion": "4.0.545",
+    "@remotion/cli": "4.0.545",
+    "@remotion/three": "4.0.545",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@react-three/fiber": "9.8.1",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.187.0"
   }
 }
