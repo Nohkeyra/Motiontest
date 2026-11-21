@@ -56,6 +56,10 @@ jobs:
           PY
       - name: Render standalone effects preview MP4
         run: npm run render:fx
+      - name: Install FFprobe for encoded-video verification
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
       - name: Validate 10 second encoded video
         run: |
           ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -of default=nw=1 out/wawasan-visual-effects.mp4
