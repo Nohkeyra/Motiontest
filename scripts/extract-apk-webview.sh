@@ -34,4 +34,14 @@ for item in "assets/illustrations/wawasan-native-sign-cutout.webp:brand-sign.web
   test -s "$root/apk-site/site/$source" || { echo "::error::Signed APK missing expected original asset $source"; exit 1; }
   cp "$root/apk-site/site/$source" "$root/capture/$dest"
 done
+# Every visual below is shipped in the signed Wawasan APK.
+mkdir -p "$root/capture/food"
+for item in nasi_lemak_ayam_goreng mee_soto laksa_johor kari_kambing kuih_muih_campur rendang_daging; do
+  source="$root/apk-site/site/assets/dishes/cutouts/$item.webp"
+  test -s "$source" || { echo "::error::Original APK dish illustration missing: $item"; exit 1; }
+  cp "$source" "$root/capture/food/$item.webp"
+done
+source="$root/apk-site/site/assets/heritage/batik_pattern.jpg"
+test -s "$source" || { echo "::error::Original APK batik texture missing."; exit 1; }
+cp "$source" "$root/capture/batik.jpg"
 echo "APK web bundle extracted, SHA256: $hash"
